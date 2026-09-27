@@ -1,6 +1,7 @@
 import "@/global.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
+import Head from "expo-router/head";
 import { StatusBar } from "expo-status-bar";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -18,6 +19,8 @@ import type { EdgeInsets, Metrics, Rect } from "react-native-safe-area-context";
 
 import { trpc, createTRPCClient } from "@/lib/trpc";
 import { initManusRuntime, subscribeSafeAreaInsets } from "@/lib/_core/manus-runtime";
+import { PracticeProgressProvider } from "@/lib/practice-progress";
+import { registerPWA } from "@/lib/pwa";
 
 const DEFAULT_WEB_INSETS: EdgeInsets = { top: 0, right: 0, bottom: 0, left: 0 };
 const DEFAULT_WEB_FRAME: Rect = { x: 0, y: 0, width: 0, height: 0 };
@@ -36,6 +39,7 @@ export default function RootLayout() {
   // Initialize Manus runtime for cookie injection from parent container
   useEffect(() => {
     initManusRuntime();
+    if (Platform.OS === "web") registerPWA();
   }, []);
 
   const handleSafeAreaUpdate = useCallback((metrics: Metrics) => {
@@ -79,9 +83,22 @@ export default function RootLayout() {
   }, [initialInsets, initialFrame]);
 
   const content = (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <trpc.Provider client={trpcClient} queryClient={queryClient}>
-        <QueryClientProvider client={queryClient}>
+    <>
+      {Platform.OS === "web" && (
+        <Head>
+          <link rel="manifest" href="manifest.json" />
+          <meta name="theme-color" content="#E96845" />
+          <meta name="mobile-web-app-capable" content="yes" />
+          <meta name="apple-mobile-web-app-capable" content="yes" />
+          <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+          <meta name="apple-mobile-web-app-title" content="Wordly + ListenLoop" />
+          <link rel="apple-touch-icon" href="icon-192.png" />
+        </Head>
+      )}
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <PracticeProgressProvider>
+          <trpc.Provider client={trpcClient} queryClient={queryClient}>
+            <QueryClientProvider client={queryClient}>
           {/* Default to hiding native headers so raw route segments don't appear (e.g. "(tabs)", "products/[id]"). */}
           {/* If a screen needs the native header, explicitly enable it and set a human title via Stack.Screen options. */}
           {/* in order for ios apps tab switching to work properly, use presentation: "fullScreenModal" for login page, whenever you decide to use presentation: "modal*/}
@@ -90,9 +107,11 @@ export default function RootLayout() {
             <Stack.Screen name="oauth/callback" />
           </Stack>
           <StatusBar style="auto" />
-        </QueryClientProvider>
-      </trpc.Provider>
-    </GestureHandlerRootView>
+            </QueryClientProvider>
+          </trpc.Provider>
+        </PracticeProgressProvider>
+      </GestureHandlerRootView>
+    </>
   );
 
   const shouldOverrideSafeArea = Platform.OS === "web";

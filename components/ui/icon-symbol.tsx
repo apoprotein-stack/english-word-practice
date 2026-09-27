@@ -32,6 +32,7 @@ const MAPPING = {
   "mic.fill": "mic",
   "stop.circle.fill": "stop-circle",
   "chart.bar.fill": "bar-chart",
+  headphones: "headset",
 } as IconMapping;
 
 /**
