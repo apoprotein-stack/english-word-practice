@@ -6,13 +6,13 @@ import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-n
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
-import { STAGES, type StageId } from "@/lib/word-practice";
+import { DAILY_GOAL, STAGES, type StageId } from "@/lib/word-practice";
 
 export default function HomeScreen() {
   const colors = useColors();
-  const [completed, setCompleted] = useState(12);
+  const [completed, setCompleted] = useState(4);
   const [selectedStage, setSelectedStage] = useState<StageId>("beginner");
-  const progress = Math.min(completed / 20, 1);
+  const progress = Math.min(completed / DAILY_GOAL, 1);
 
   const tap = () => {
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -20,7 +20,7 @@ export default function HomeScreen() {
 
   const markWordLearned = () => {
     tap();
-    setCompleted((value) => Math.min(value + 1, 20));
+    setCompleted((value) => Math.min(value + 1, DAILY_GOAL));
   };
 
   const startSelectedStage = () => {
@@ -64,12 +64,12 @@ export default function HomeScreen() {
           </View>
           <View style={styles.progressNumbers}>
             <Text style={styles.progressValue}>{completed}</Text>
-            <Text style={styles.progressTotal}>/ 20 words</Text>
+            <Text style={styles.progressTotal}>/ {DAILY_GOAL} words</Text>
           </View>
           <View style={styles.track}>
             <View style={[styles.trackFill, { width: `${progress * 100}%` }]} />
           </View>
-          <Text style={styles.progressHint}>{20 - completed === 0 ? "Goal complete — lovely work." : `${20 - completed} words left to reach today's goal.`}</Text>
+          <Text style={styles.progressHint}>{DAILY_GOAL - completed === 0 ? "Goal complete — lovely work." : `${DAILY_GOAL - completed} words left to reach today's goal.`}</Text>
         </View>
 
         <View style={styles.sectionHeading}>

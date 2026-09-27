@@ -1,4 +1,5 @@
 export type StageId = "beginner" | "intermediate" | "advanced" | "expert";
+export const DAILY_GOAL = 10;
 
 export type Stage = { id: StageId; name: string; english: string; description: string; wordCount: number; color: string };
 

@@ -37,21 +37,25 @@ export default function PracticeScreen() {
     if (Platform.OS !== "web") Haptics.impactAsync(style);
   };
 
-  const speak = (text: string, rate = 0.8) => {
+  const speak = (text: string, rate = 0.98) => {
     Speech.stop();
     Speech.speak(text, { language: "en-US", rate, volume: 1 });
   };
 
   useEffect(() => {
     if (!question) return;
-    if (phase === "preview") speak(question.word, 0.78);
-    if (phase === "spell") speak(question.word.split("").join(", "), 0.62);
-    return () => { Speech.stop(); };
+    if (phase === "preview") speak(question.word, 0.98);
+    if (phase === "example") speak(question.example, 0.9);
   }, [current, phase]);
+
+  useEffect(() => () => { Speech.stop(); }, []);
 
   const nextPhase = () => {
     tap();
-    if (phaseIndex < PHASES.length - 1) setPhase(PHASES[phaseIndex + 1]);
+    if (phase === "spell") {
+      speak(question.word, 0.98);
+      setPhase("speak");
+    } else if (phaseIndex < PHASES.length - 1) setPhase(PHASES[phaseIndex + 1]);
     else {
       setCurrent((value) => value + 1);
       setPhase("preview");
@@ -93,7 +97,7 @@ export default function PracticeScreen() {
   }
 
   const phaseTitle = phase === "preview" ? "導讀一次" : phase === "spell" ? "拼讀一次" : phase === "speak" ? "換你說說看" : "應用例句";
-  const buttonLabel = phase === "preview" ? "我讀懂了，開始拼讀" : phase === "spell" ? "我已拼讀一次" : phase === "speak" ? (recorderState.isRecording ? "完成口語拼讀" : "按下開始說拼法") : current === words.length - 1 ? "完成本次學習" : "下一個單字";
+  const buttonLabel = phase === "preview" ? "我讀懂了，開始拼讀" : phase === "spell" ? "播放單字後繼續" : phase === "speak" ? (recorderState.isRecording ? "完成口語拼讀" : "按下開始說拼法") : current === words.length - 1 ? "完成本次學習" : "下一個單字";
 
   return (
     <ScreenContainer className="px-5" containerClassName="bg-background" edges={["top", "bottom", "left", "right"]}>
@@ -113,7 +117,7 @@ export default function PracticeScreen() {
             <Text style={styles.word}>{question.word}</Text>
             <Text style={styles.pronunciation}>{question.pronunciation}</Text>
             <Text style={styles.partOfSpeech}>{question.partOfSpeech.toUpperCase()} · LONGMAN DICTIONARY 參照</Text>
-            <Pressable onPress={() => speak(phase === "spell" ? question.word.split("").join(", ") : question.word, phase === "spell" ? 0.62 : 0.8)} style={({ pressed }) => [styles.audioButton, pressed && styles.pressed]}><IconSymbol name="speaker.wave.2.fill" size={17} color="#FFFFFF" /><Text style={styles.audioText}>{phase === "spell" ? "聽拼讀示範" : "聽發音"}</Text></Pressable>
+            <Pressable onPress={() => speak(phase === "spell" ? question.word.split("").join(", ") : phase === "example" ? question.example : question.word, phase === "spell" ? 0.82 : phase === "example" ? 0.9 : 0.98)} style={({ pressed }) => [styles.audioButton, pressed && styles.pressed]}><IconSymbol name="speaker.wave.2.fill" size={17} color="#FFFFFF" /><Text style={styles.audioText}>{phase === "spell" ? "聽拼讀示範" : phase === "example" ? "聽例句" : "聽發音"}</Text></Pressable>
           </View>
 
           {phase === "preview" && <View style={[styles.infoCard, { backgroundColor: colors.surface, borderColor: colors.border }]}><Text style={[styles.definition, { color: colors.foreground }]}>{question.definition}</Text><Text style={[styles.translation, { color: colors.muted }]}>{question.translation}</Text><Text style={[styles.source, { color: colors.primary }]}>詞義參照：Longman Dictionary of Contemporary English</Text></View>}

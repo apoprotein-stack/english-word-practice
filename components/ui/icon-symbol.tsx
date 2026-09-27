@@ -31,6 +31,7 @@ const MAPPING = {
   "xmark.circle.fill": "cancel",
   "mic.fill": "mic",
   "stop.circle.fill": "stop-circle",
+  "chart.bar.fill": "bar-chart",
 } as IconMapping;
 
 /**
