@@ -1,5 +1,6 @@
 import { router, useLocalSearchParams } from "expo-router";
 import * as Haptics from "expo-haptics";
+import * as Speech from "expo-speech";
 import { RecordingPresets, requestRecordingPermissionsAsync, setAudioModeAsync, useAudioRecorder, useAudioRecorderState } from "expo-audio";
 import { useEffect, useMemo, useState } from "react";
 import { Alert, Platform, Pressable, StyleSheet, Text, View } from "react-native";
@@ -35,6 +36,18 @@ export default function PracticeScreen() {
   const tap = (style: Haptics.ImpactFeedbackStyle = Haptics.ImpactFeedbackStyle.Light) => {
     if (Platform.OS !== "web") Haptics.impactAsync(style);
   };
+
+  const speak = (text: string, rate = 0.8) => {
+    Speech.stop();
+    Speech.speak(text, { language: "en-US", rate, volume: 1 });
+  };
+
+  useEffect(() => {
+    if (!question) return;
+    if (phase === "preview") speak(question.word, 0.78);
+    if (phase === "spell") speak(question.word.split("").join(", "), 0.62);
+    return () => { Speech.stop(); };
+  }, [current, phase]);
 
   const nextPhase = () => {
     tap();
@@ -100,6 +113,7 @@ export default function PracticeScreen() {
             <Text style={styles.word}>{question.word}</Text>
             <Text style={styles.pronunciation}>{question.pronunciation}</Text>
             <Text style={styles.partOfSpeech}>{question.partOfSpeech.toUpperCase()} · LONGMAN DICTIONARY 參照</Text>
+            <Pressable onPress={() => speak(phase === "spell" ? question.word.split("").join(", ") : question.word, phase === "spell" ? 0.62 : 0.8)} style={({ pressed }) => [styles.audioButton, pressed && styles.pressed]}><IconSymbol name="speaker.wave.2.fill" size={17} color="#FFFFFF" /><Text style={styles.audioText}>{phase === "spell" ? "聽拼讀示範" : "聽發音"}</Text></Pressable>
           </View>
 
           {phase === "preview" && <View style={[styles.infoCard, { backgroundColor: colors.surface, borderColor: colors.border }]}><Text style={[styles.definition, { color: colors.foreground }]}>{question.definition}</Text><Text style={[styles.translation, { color: colors.muted }]}>{question.translation}</Text><Text style={[styles.source, { color: colors.primary }]}>詞義參照：Longman Dictionary of Contemporary English</Text></View>}
@@ -135,6 +149,8 @@ const styles = StyleSheet.create({
   word: { color: "#FFFFFF", fontSize: 39, lineHeight: 46, fontWeight: "900", letterSpacing: -1.1 },
   pronunciation: { color: "#FFFFFFB8", fontSize: 15, marginTop: 4 },
   partOfSpeech: { color: "#FFFFFF80", fontSize: 9, letterSpacing: 1, fontWeight: "800", marginTop: 17 },
+  audioButton: { flexDirection: "row", alignItems: "center", alignSelf: "flex-start", gap: 7, borderRadius: 14, backgroundColor: "#FFFFFF18", paddingHorizontal: 11, paddingVertical: 8, marginTop: 16 },
+  audioText: { color: "#FFFFFF", fontSize: 12, fontWeight: "800" },
   infoCard: { borderRadius: 18, borderWidth: 1, padding: 18 },
   definition: { fontSize: 17, fontWeight: "800", lineHeight: 24 },
   translation: { fontSize: 13, marginTop: 7, lineHeight: 19 },
