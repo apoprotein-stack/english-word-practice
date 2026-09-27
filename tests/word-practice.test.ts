@@ -1,6 +1,17 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { DAILY_GOAL, QUESTIONS, STAGES, getQuestionsForStage, scoreAnswers } from "../lib/word-practice";
+import { DEFAULT_LEARNING_RECORD, LEARNING_STORAGE_KEY, loadLearningRecord, saveLearningRecord } from "../lib/learning-storage";
+
+const storage = new Map<string, string>();
+vi.mock("@react-native-async-storage/async-storage", () => ({
+  default: {
+    getItem: async (key: string) => storage.get(key) ?? null,
+    setItem: async (key: string, value: string) => { storage.set(key, value); },
+  },
+}));
+
+beforeEach(() => storage.clear());
 
 describe("Wordly learning stages", () => {
   it("sets a ten-word daily goal", () => {
@@ -22,5 +33,12 @@ describe("Wordly learning stages", () => {
   it("scores matching answers by position", () => {
     expect(scoreAnswers(["curious", "wrong", "ambiguous"])).toBe(1);
     expect(scoreAnswers([])).toBe(0);
+  });
+
+  it("persists a learning record through the storage adapter", async () => {
+    const record = { ...DEFAULT_LEARNING_RECORD, todayWords: 3, totalWords: 3, lastDate: new Date().toISOString().slice(0, 10) };
+    await saveLearningRecord(record);
+    expect(storage.has(LEARNING_STORAGE_KEY)).toBe(true);
+    await expect(loadLearningRecord()).resolves.toMatchObject({ todayWords: 3, totalWords: 3 });
   });
 });

@@ -1,32 +1,33 @@
 import { router } from "expo-router";
 import * as Haptics from "expo-haptics";
-import { useMemo } from "react";
+import { useEffect, useState } from "react";
 import { FlatList, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
+import { DEFAULT_LEARNING_RECORD, loadLearningRecord, type LearningRecord } from "@/lib/learning-storage";
 import { STAGES } from "@/lib/word-practice";
 
-const RECENT_SESSIONS = [
-  { date: "今天", label: "初階 · 導讀練習", words: 4, minutes: 8, color: STAGES[0].color },
-  { date: "昨天", label: "中階 · 例句練習", words: 7, minutes: 12, color: STAGES[1].color },
-  { date: "週五", label: "初階 · 複習單字", words: 10, minutes: 15, color: STAGES[0].color },
-];
+const DAY_LABELS = ["一", "二", "三", "四", "五", "六", "日"];
 
 export default function ProgressScreen() {
   const colors = useColors();
-  const weekly = useMemo(() => [4, 7, 5, 9, 10, 0, 0], []);
-  const max = Math.max(...weekly, 1);
+  const [record, setRecord] = useState<LearningRecord>(DEFAULT_LEARNING_RECORD);
+  useEffect(() => { loadLearningRecord().then(setRecord); }, []);
+  const max = Math.max(...record.weekly, 1);
+  const weekTotal = record.weekly.reduce((total, value) => total + value, 0);
+  const familiarity = record.totalWords === 0 ? 0 : Math.min(100, Math.round((record.totalWords / 50) * 100));
   const tap = () => {
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   };
+  const colorForSession = (label: string) => STAGES.find((stage) => label.startsWith(stage.name))?.color ?? colors.primary;
 
   return (
     <ScreenContainer className="px-5" containerClassName="bg-background">
       <FlatList
-        data={RECENT_SESSIONS}
-        keyExtractor={(item) => `${item.date}-${item.label}`}
+        data={record.sessions}
+        keyExtractor={(item) => item.id}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.list}
         ListHeaderComponent={
@@ -35,27 +36,20 @@ export default function ProgressScreen() {
               <View><Text style={[styles.eyebrow, { color: colors.primary }]}>YOUR PROGRESS</Text><Text style={[styles.title, { color: colors.foreground }]}>學習記錄</Text></View>
               <Pressable onPress={() => { tap(); router.push("/(tabs)/practice"); }} style={({ pressed }) => [styles.studyButton, { backgroundColor: colors.primary }, pressed && styles.pressed]}><IconSymbol name="bolt.fill" size={17} color="#FFFFFF" /><Text style={styles.studyText}>繼續學習</Text></Pressable>
             </View>
-
             <View style={styles.statsRow}>
-              <View style={[styles.statCard, { backgroundColor: colors.foreground }]}><IconSymbol name="bolt.fill" size={17} color="#F4B942" /><Text style={styles.statNumber}>4</Text><Text style={styles.statLabel}>連續天數</Text></View>
-              <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}><IconSymbol name="book.fill" size={17} color={colors.primary} /><Text style={[styles.statNumber, { color: colors.foreground }]}>36</Text><Text style={[styles.statLabel, { color: colors.muted }]}>已學單字</Text></View>
-              <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}><IconSymbol name="chart.bar.fill" size={17} color={colors.success} /><Text style={[styles.statNumber, { color: colors.foreground }]}>82%</Text><Text style={[styles.statLabel, { color: colors.muted }]}>熟悉度</Text></View>
+              <View style={[styles.statCard, { backgroundColor: colors.foreground }]}><IconSymbol name="bolt.fill" size={17} color="#F4B942" /><Text style={styles.statNumber}>{record.streak}</Text><Text style={styles.statLabel}>連續天數</Text></View>
+              <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}><IconSymbol name="book.fill" size={17} color={colors.primary} /><Text style={[styles.statNumber, { color: colors.foreground }]}>{record.totalWords}</Text><Text style={[styles.statLabel, { color: colors.muted }]}>已學單字</Text></View>
+              <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}><IconSymbol name="chart.bar.fill" size={17} color={colors.success} /><Text style={[styles.statNumber, { color: colors.foreground }]}>{familiarity}%</Text><Text style={[styles.statLabel, { color: colors.muted }]}>熟悉度</Text></View>
             </View>
-
             <View style={[styles.chartCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-              <View style={styles.cardHeader}><View><Text style={[styles.cardTitle, { color: colors.foreground }]}>本週學習量</Text><Text style={[styles.cardHint, { color: colors.muted }]}>每天目標 10 個單字</Text></View><Text style={[styles.weekTotal, { color: colors.primary }]}>35 words</Text></View>
-              <View style={styles.chart}>
-                <View style={styles.gridLine} /><View style={[styles.gridLine, { top: 34 }]} /><View style={[styles.gridLine, { top: 68 }]} />
-                <View style={styles.bars}><View style={styles.barColumn}><View style={[styles.bar, { height: 28, backgroundColor: STAGES[0].color }]} /><Text style={[styles.day, { color: colors.muted }]}>一</Text></View><View style={styles.barColumn}><View style={[styles.bar, { height: 48, backgroundColor: STAGES[1].color }]} /><Text style={[styles.day, { color: colors.muted }]}>二</Text></View><View style={styles.barColumn}><View style={[styles.bar, { height: 36, backgroundColor: STAGES[0].color }]} /><Text style={[styles.day, { color: colors.muted }]}>三</Text></View><View style={styles.barColumn}><View style={[styles.bar, { height: 58, backgroundColor: STAGES[2].color }]} /><Text style={[styles.day, { color: colors.muted }]}>四</Text></View><View style={styles.barColumn}><View style={[styles.bar, { height: 68, backgroundColor: STAGES[0].color }]} /><Text style={[styles.day, { color: colors.muted }]}>五</Text></View><View style={styles.barColumn}><View style={[styles.bar, { height: 5, backgroundColor: colors.border }]} /><Text style={[styles.day, { color: colors.muted }]}>六</Text></View><View style={styles.barColumn}><View style={[styles.bar, { height: 5, backgroundColor: colors.border }]} /><Text style={[styles.day, { color: colors.muted }]}>日</Text></View></View>
-              </View>
+              <View style={styles.cardHeader}><View><Text style={[styles.cardTitle, { color: colors.foreground }]}>本週學習量</Text><Text style={[styles.cardHint, { color: colors.muted }]}>每天目標 10 個單字</Text></View><Text style={[styles.weekTotal, { color: colors.primary }]}>{weekTotal} words</Text></View>
+              <View style={styles.chart}><View style={styles.gridLine} /><View style={[styles.gridLine, { top: 34 }]} /><View style={[styles.gridLine, { top: 68 }]} /><View style={styles.bars}>{record.weekly.map((count, index) => <View key={DAY_LABELS[index]} style={styles.barColumn}><View style={[styles.bar, { height: Math.max(5, (count / max) * 68), backgroundColor: count > 0 ? STAGES[index % STAGES.length].color : colors.border }]} /><Text style={[styles.day, { color: colors.muted }]}>{DAY_LABELS[index]}</Text></View>)}</View></View>
             </View>
-
-            <View style={styles.sectionHeader}><Text style={[styles.sectionTitle, { color: colors.foreground }]}>最近活動</Text><Text style={[styles.sectionHint, { color: colors.muted }]}>共 3 次</Text></View>
+            <View style={styles.sectionHeader}><Text style={[styles.sectionTitle, { color: colors.foreground }]}>最近活動</Text><Text style={[styles.sectionHint, { color: colors.muted }]}>共 {record.sessions.length} 次</Text></View>
           </View>
         }
-        renderItem={({ item }) => (
-          <View style={[styles.session, { backgroundColor: colors.surface, borderColor: colors.border }]}><View style={[styles.sessionDot, { backgroundColor: item.color }]} /><View style={styles.sessionInfo}><Text style={[styles.sessionLabel, { color: colors.foreground }]}>{item.label}</Text><Text style={[styles.sessionDate, { color: colors.muted }]}>{item.date} · {item.minutes} 分鐘</Text></View><Text style={[styles.sessionWords, { color: item.color }]}>{item.words} 字</Text></View>
-        )}
+        renderItem={({ item }) => { const itemColor = colorForSession(item.label); return <View style={[styles.session, { backgroundColor: colors.surface, borderColor: colors.border }]}><View style={[styles.sessionDot, { backgroundColor: itemColor }]} /><View style={styles.sessionInfo}><Text style={[styles.sessionLabel, { color: colors.foreground }]}>{item.label}</Text><Text style={[styles.sessionDate, { color: colors.muted }]}>{item.date} · {item.minutes} 分鐘</Text></View><Text style={[styles.sessionWords, { color: itemColor }]}>{item.words} 字</Text></View>; }}
+        ListEmptyComponent={<View style={styles.empty}><IconSymbol name="book.fill" size={28} color={colors.muted} /><Text style={[styles.emptyTitle, { color: colors.foreground }]}>還沒有學習記錄</Text><Text style={[styles.emptyText, { color: colors.muted }]}>完成一輪練習後，紀錄會自動保存在本機。</Text></View>}
         ListFooterComponent={<View style={[styles.footerTip, { backgroundColor: `${colors.warning}18` }]}><IconSymbol name="star.fill" size={18} color={colors.warning} /><Text style={[styles.footerText, { color: colors.foreground }]}>完成每日 10 字目標，持續 7 天就能建立穩定習慣。</Text></View>}
       />
     </ScreenContainer>
@@ -93,6 +87,9 @@ const styles = StyleSheet.create({
   sessionLabel: { fontSize: 14, fontWeight: "800" },
   sessionDate: { fontSize: 11, marginTop: 4 },
   sessionWords: { fontSize: 14, fontWeight: "900" },
+  empty: { alignItems: "center", paddingTop: 42, paddingBottom: 22 },
+  emptyTitle: { fontSize: 16, fontWeight: "800", marginTop: 12 },
+  emptyText: { fontSize: 12, marginTop: 5, textAlign: "center" },
   footerTip: { borderRadius: 15, padding: 14, flexDirection: "row", alignItems: "center", gap: 9, marginTop: 16 },
   footerText: { flex: 1, fontSize: 12, lineHeight: 18, fontWeight: "600" },
   pressed: { opacity: 0.8, transform: [{ scale: 0.98 }] },

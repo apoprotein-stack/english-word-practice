@@ -8,6 +8,7 @@ import { Alert, Platform, Pressable, StyleSheet, Text, View } from "react-native
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
+import { recordLearningSession } from "@/lib/learning-storage";
 import { getQuestionsForStage, STAGES, type StageId } from "@/lib/word-practice";
 
 type Phase = "preview" | "spell" | "speak" | "example";
@@ -57,6 +58,7 @@ export default function PracticeScreen() {
       setPhase("speak");
     } else if (phaseIndex < PHASES.length - 1) setPhase(PHASES[phaseIndex + 1]);
     else {
+      if (current === words.length - 1) void recordLearningSession(stage.name, words.length);
       setCurrent((value) => value + 1);
       setPhase("preview");
     }

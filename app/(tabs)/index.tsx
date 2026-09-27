@@ -1,26 +1,37 @@
 import { router } from "expo-router";
 import * as Haptics from "expo-haptics";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
+import { incrementTodayWord, loadLearningRecord } from "@/lib/learning-storage";
 import { DAILY_GOAL, STAGES, type StageId } from "@/lib/word-practice";
 
 export default function HomeScreen() {
   const colors = useColors();
-  const [completed, setCompleted] = useState(4);
+  const [completed, setCompleted] = useState(0);
+  const [streak, setStreak] = useState(0);
   const [selectedStage, setSelectedStage] = useState<StageId>("beginner");
   const progress = Math.min(completed / DAILY_GOAL, 1);
+
+  useEffect(() => {
+    loadLearningRecord().then((record) => {
+      setCompleted(record.todayWords);
+      setStreak(record.streak);
+    });
+  }, []);
 
   const tap = () => {
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   };
 
-  const markWordLearned = () => {
+  const markWordLearned = async () => {
     tap();
-    setCompleted((value) => Math.min(value + 1, DAILY_GOAL));
+    const record = await incrementTodayWord();
+    setCompleted(record.todayWords);
+    setStreak(record.streak);
   };
 
   const startSelectedStage = () => {
@@ -59,7 +70,7 @@ export default function HomeScreen() {
             </View>
             <View style={styles.progressBadge}>
               <IconSymbol name="bolt.fill" size={15} color="#17202A" />
-              <Text style={styles.progressBadgeText}>4 day streak</Text>
+              <Text style={styles.progressBadgeText}>{streak} day streak</Text>
             </View>
           </View>
           <View style={styles.progressNumbers}>
