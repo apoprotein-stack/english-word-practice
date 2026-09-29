@@ -45,18 +45,52 @@ export default function PracticeScreen() {
 
   useEffect(() => {
     if (!question) return;
-    if (phase === "preview") speak(question.word, 0.98);
-    if (phase === "example") speak(question.example, 0.9);
+    let cancelled = false;
+    Speech.stop();
+
+    if (phase === "preview") {
+      // 每個新單字先自動播放完整發音，完成後自動進入拼讀示範。
+      Speech.speak(question.word, {
+        language: "en-US",
+        rate: 0.98,
+        volume: 1,
+        onDone: () => {
+          if (!cancelled) setPhase("spell");
+        },
+      });
+    } else if (phase === "spell") {
+      // 自動逐字母拼讀，完成後再播放一次完整單字，接著交給使用者口說。
+      Speech.speak(question.word.split("").join(", "), {
+        language: "en-US",
+        rate: 0.88,
+        volume: 1,
+        onDone: () => {
+          if (cancelled) return;
+          Speech.speak(question.word, {
+            language: "en-US",
+            rate: 0.98,
+            volume: 1,
+            onDone: () => {
+              if (!cancelled) setPhase("speak");
+            },
+          });
+        },
+      });
+    } else if (phase === "example") {
+      speak(question.example, 0.9);
+    }
+
+    return () => {
+      cancelled = true;
+      Speech.stop();
+    };
   }, [current, phase]);
 
   useEffect(() => () => { Speech.stop(); }, []);
 
   const nextPhase = () => {
     tap();
-    if (phase === "spell") {
-      speak(question.word, 0.98);
-      setPhase("speak");
-    } else if (phaseIndex < PHASES.length - 1) setPhase(PHASES[phaseIndex + 1]);
+    if (phaseIndex < PHASES.length - 1) setPhase(PHASES[phaseIndex + 1]);
     else {
       if (current === words.length - 1) void recordLearningSession(stage.name, words.length);
       setCurrent((value) => value + 1);
@@ -99,7 +133,7 @@ export default function PracticeScreen() {
   }
 
   const phaseTitle = phase === "preview" ? "導讀一次" : phase === "spell" ? "拼讀一次" : phase === "speak" ? "換你說說看" : "應用例句";
-  const buttonLabel = phase === "preview" ? "我讀懂了，開始拼讀" : phase === "spell" ? "播放單字後繼續" : phase === "speak" ? (recorderState.isRecording ? "完成口語拼讀" : "按下開始說拼法") : current === words.length - 1 ? "完成本次學習" : "下一個單字";
+  const buttonLabel = phase === "preview" ? "跳過導讀，開始拼讀" : phase === "spell" ? "跳過示範，開始口語拼讀" : phase === "speak" ? (recorderState.isRecording ? "完成口語拼讀" : "按下開始說拼法") : current === words.length - 1 ? "完成本次學習" : "下一個單字";
 
   return (
     <ScreenContainer className="px-5" containerClassName="bg-background" edges={["top", "bottom", "left", "right"]}>
@@ -123,7 +157,7 @@ export default function PracticeScreen() {
           </View>
 
           {phase === "preview" && <View style={[styles.infoCard, { backgroundColor: colors.surface, borderColor: colors.border }]}><Text style={[styles.definition, { color: colors.foreground }]}>{question.definition}</Text><Text style={[styles.translation, { color: colors.muted }]}>{question.translation}</Text><Text style={[styles.source, { color: colors.primary }]}>詞義參照：Longman Dictionary of Contemporary English</Text></View>}
-          {phase === "spell" && <View style={[styles.infoCard, { backgroundColor: colors.surface, borderColor: colors.border }]}><Text style={[styles.spellLabel, { color: colors.muted }]}>請跟著拼一次</Text><Text style={[styles.spelling, { color: colors.foreground }]}>{question.word.split("").join(" · ")}</Text><Text style={[styles.spellHint, { color: colors.muted }]}>先看字母，再慢慢說出每一個音。</Text></View>}
+          {phase === "spell" && <View style={[styles.infoCard, { backgroundColor: colors.surface, borderColor: colors.border }]}><Text style={[styles.spellLabel, { color: colors.muted }]}>自動拼讀示範</Text><Text style={[styles.spelling, { color: colors.foreground }]}>{question.word.split("").join(" · ")}</Text><Text style={[styles.spellHint, { color: colors.muted }]}>請聽逐字母拼讀，接著會再播放一次完整單字。</Text></View>}
           {phase === "speak" && <View style={[styles.infoCard, { backgroundColor: colors.surface, borderColor: colors.border }]}><Text style={[styles.speakTitle, { color: colors.foreground }]}>{recorderState.isRecording ? "正在聆聽你的拼讀…" : "請口語拼讀這個單字"}</Text><Text style={[styles.speakHint, { color: colors.muted }]}>例如：{question.word.split("").join(" · ")}</Text><Pressable onPress={toggleRecording} style={({ pressed }) => [styles.recordButton, { backgroundColor: recorderState.isRecording ? colors.error : stage.color }, pressed && styles.pressed]}><IconSymbol name={recorderState.isRecording ? "stop.circle.fill" : "mic.fill"} size={24} color="#FFFFFF" /><Text style={styles.recordText}>{recorderState.isRecording ? "停止錄音" : "開始錄音"}</Text></Pressable></View>}
           {phase === "example" && <View style={[styles.infoCard, { backgroundColor: colors.surface, borderColor: colors.border }]}><Text style={[styles.exampleLabel, { color: colors.primary }]}>IN CONTEXT</Text><Text style={[styles.example, { color: colors.foreground }]}>{question.example}</Text><Text style={[styles.translation, { color: colors.muted }]}>把這個單字放進真實語境裡記住它。</Text></View>}
         </View>
