@@ -62,7 +62,9 @@ export default function HomeScreen() {
           </Pressable>
         </View>
 
-        <View style={[styles.progressCard, { backgroundColor: colors.foreground }]}>
+        <View style={[styles.webModeBanner, { backgroundColor: `${colors.primary}12`, borderColor: `${colors.primary}35` }]}><View style={[styles.webModeDot, { backgroundColor: colors.primary }]} /><Text style={[styles.webModeText, { color: colors.primary }]}>Wordly 網站練習版 · 可直接用瀏覽器學習</Text></View>
+
+        <View style={[styles.progressCard, { backgroundColor: colors.foreground }]}> 
           <View style={styles.cardOrb} />
           <View style={styles.progressTopline}>
             <View>
@@ -184,6 +186,9 @@ const styles = StyleSheet.create({
   greeting: { fontSize: 24, fontWeight: "800", letterSpacing: -0.5, lineHeight: 31, marginTop: 3 },
   avatar: { width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center" },
   avatarText: { color: "#FFFFFF", fontSize: 16, fontWeight: "800" },
+  webModeBanner: { minHeight: 36, borderRadius: 12, borderWidth: 1, paddingHorizontal: 11, flexDirection: "row", alignItems: "center", gap: 8 },
+  webModeDot: { width: 8, height: 8, borderRadius: 4 },
+  webModeText: { fontSize: 11, fontWeight: "800" },
   progressCard: { minHeight: 205, borderRadius: 26, padding: 22, overflow: "hidden" },
   cardOrb: { position: "absolute", width: 180, height: 180, borderRadius: 90, right: -45, top: -75, backgroundColor: "#FFFFFF12" },
   progressTopline: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
