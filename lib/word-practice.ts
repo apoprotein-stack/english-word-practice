@@ -37,15 +37,18 @@ export function getQuestionsForStage(stage: StageId): Question[] {
   return QUESTIONS.filter((question) => question.stage === stage);
 }
 
-export function getDailyWordPlan(stage: StageId, date = new Date()): { newWords: Question[]; reviewWords: Question[] } {
+export function getDailyWordPlan(stage: StageId, date = new Date(), learnedWords: string[] = []): { newWords: Question[]; reviewWords: Question[] } {
   const pool = getQuestionsForStage(stage);
   if (pool.length === 0) return { newWords: [], reviewWords: [] };
   const dateSeed = Number(`${date.getFullYear()}${date.getMonth() + 1}${date.getDate()}`);
   const offset = dateSeed % pool.length;
   const ordered = pool.slice(offset).concat(pool.slice(0, offset));
+  const learned = new Set(learnedWords);
+  const newPool = ordered.filter((question) => !learned.has(question.word));
+  const reviewPool = ordered.filter((question) => learned.has(question.word));
   return {
-    newWords: ordered.slice(0, Math.min(DAILY_NEW_WORDS, ordered.length)),
-    reviewWords: ordered.slice(DAILY_NEW_WORDS, DAILY_NEW_WORDS + DAILY_REVIEW_WORDS).concat(ordered.slice(0, Math.max(0, DAILY_REVIEW_WORDS - Math.max(0, ordered.length - DAILY_NEW_WORDS)))).slice(0, DAILY_REVIEW_WORDS),
+    newWords: newPool.slice(0, DAILY_NEW_WORDS),
+    reviewWords: reviewPool.slice(0, DAILY_REVIEW_WORDS),
   };
 }
 

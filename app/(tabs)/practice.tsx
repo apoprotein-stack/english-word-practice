@@ -8,7 +8,7 @@ import { Alert, Platform, Pressable, StyleSheet, Text, View } from "react-native
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
-import { recordLearningSession } from "@/lib/learning-storage";
+import { loadLearningRecord, recordLearningSession } from "@/lib/learning-storage";
 import { DAILY_NEW_WORDS, DAILY_REVIEW_WORDS, getDailyWordPlan, STAGES, type StageId } from "@/lib/word-practice";
 
 type Phase = "preview" | "spell" | "speak" | "example";
@@ -19,7 +19,8 @@ export default function PracticeScreen() {
   const params = useLocalSearchParams<{ stage?: string }>();
   const stageId = (typeof params.stage === "string" ? params.stage : "beginner") as StageId;
   const stage = STAGES.find((item) => item.id === stageId) ?? STAGES[0];
-  const dailyPlan = useMemo(() => getDailyWordPlan(stage.id, new Date()), [stage.id]);
+  const [learnedWords, setLearnedWords] = useState<string[]>([]);
+  const dailyPlan = useMemo(() => getDailyWordPlan(stage.id, new Date(), learnedWords), [stage.id, learnedWords]);
   const words = useMemo(() => [...dailyPlan.newWords, ...dailyPlan.reviewWords], [dailyPlan]);
   const [current, setCurrent] = useState(0);
   const [phase, setPhase] = useState<Phase>("preview");
@@ -29,6 +30,11 @@ export default function PracticeScreen() {
   const finished = !question;
   const phaseIndex = PHASES.indexOf(phase);
   const isReviewWord = current >= dailyPlan.newWords.length;
+
+
+  useEffect(() => {
+    loadLearningRecord().then((record) => setLearnedWords(record.learnedWords));
+  }, []);
 
   useEffect(() => {
     requestRecordingPermissionsAsync().then((permission) => {
@@ -94,7 +100,7 @@ export default function PracticeScreen() {
     tap();
     if (phaseIndex < PHASES.length - 1) setPhase(PHASES[phaseIndex + 1]);
     else {
-      if (current === words.length - 1) void recordLearningSession(stage.name, words.length);
+      if (current === words.length - 1) void recordLearningSession(stage.name, words.length, undefined, words.map((item) => item.word));
       setCurrent((value) => value + 1);
       setPhase("preview");
     }

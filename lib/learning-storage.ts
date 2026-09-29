@@ -19,6 +19,7 @@ export type LearningRecord = {
   lastDate: string | null;
   weekly: number[];
   sessions: LearningSession[];
+  learnedWords: string[];
 };
 
 export const DEFAULT_LEARNING_RECORD: LearningRecord = {
@@ -28,6 +29,7 @@ export const DEFAULT_LEARNING_RECORD: LearningRecord = {
   lastDate: null,
   weekly: [0, 0, 0, 0, 0, 0, 0],
   sessions: [],
+  learnedWords: [],
 };
 
 const todayKey = () => new Date().toISOString().slice(0, 10);
@@ -42,6 +44,7 @@ function normalizeRecord(value: Partial<LearningRecord>): LearningRecord {
     streak: Math.max(0, Number(value.streak) || 0),
     weekly: Array.isArray(value.weekly) && value.weekly.length === 7 ? value.weekly.map((item) => Math.max(0, Number(item) || 0)) : [...DEFAULT_LEARNING_RECORD.weekly],
     sessions: Array.isArray(value.sessions) ? value.sessions.slice(0, 20) : [],
+    learnedWords: Array.isArray(value.learnedWords) ? [...new Set(value.learnedWords.filter((word): word is string => typeof word === "string"))] : [],
   };
 }
 
@@ -77,7 +80,7 @@ export async function incrementTodayWord(): Promise<LearningRecord> {
   return next;
 }
 
-export async function recordLearningSession(stageName: string, words: number, minutes = Math.max(1, words * 2)): Promise<LearningRecord> {
+export async function recordLearningSession(stageName: string, words: number, minutes = Math.max(1, words * 2), learnedWords: string[] = []): Promise<LearningRecord> {
   const current = await loadLearningRecord();
   const date = todayKey();
   const next = {
@@ -88,6 +91,7 @@ export async function recordLearningSession(stageName: string, words: number, mi
     lastDate: date,
     weekly: current.weekly.map((count, index) => index === dayIndex() ? count + words : count),
     sessions: [{ id: `${Date.now()}-${stageName}`, date: "今天", label: `${stageName} · 導讀練習`, words, minutes }, ...current.sessions].slice(0, 20),
+    learnedWords: [...new Set([...current.learnedWords, ...learnedWords])],
   };
   await saveLearningRecord(next);
   return next;

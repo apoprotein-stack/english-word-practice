@@ -43,6 +43,9 @@ describe("Wordly learning stages", () => {
     expect(plan.reviewWords.every((word) => word.stage === "beginner")).toBe(true);
     expect(plan.newWords.length).toBeLessThanOrEqual(DAILY_NEW_WORDS);
     expect(plan.reviewWords.length).toBeLessThanOrEqual(DAILY_REVIEW_WORDS);
+    const afterLearning = getDailyWordPlan("beginner", new Date(2026, 8, 29), ["curious"]);
+    expect(afterLearning.reviewWords.map((word) => word.word)).toContain("curious");
+    expect(afterLearning.newWords.map((word) => word.word)).not.toContain("curious");
   });
 
   it("persists a learning record through the storage adapter", async () => {
