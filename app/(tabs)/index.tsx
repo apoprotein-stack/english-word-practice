@@ -49,7 +49,7 @@ export default function HomeScreen() {
         <View style={styles.header}>
           <View>
             <Text style={[styles.eyebrow, { color: colors.muted }]}>{today.toUpperCase()}</Text>
-            <Text style={[styles.greeting, { color: colors.foreground }]}>Keep your streak alive.</Text>
+            <Text style={[styles.greeting, { color: colors.foreground }]}>Wordly 網站練習版</Text>
           </View>
           <Pressable
             accessibilityLabel="Open profile"
