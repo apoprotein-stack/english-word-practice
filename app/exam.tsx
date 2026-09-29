@@ -1,4 +1,4 @@
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import * as Haptics from "expo-haptics";
 import * as Speech from "expo-speech";
 import { useEffect, useMemo, useState } from "react";
@@ -8,7 +8,7 @@ import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
 import { averageMastery, loadMastery, masteryLabel, recordMastery } from "@/lib/mastery-storage";
-import { QUESTIONS, type Question } from "@/lib/word-practice";
+import { getQuestionsForStage, STAGES, type Question, type StageId } from "@/lib/word-practice";
 import { recordLearningSession } from "@/lib/learning-storage";
 
 type ExamType = "recognition" | "listening" | "spelling" | "context";
@@ -21,7 +21,13 @@ function shuffle<T>(items: T[]): T[] {
 
 export default function ExamScreen() {
   const colors = useColors();
-  const questions = useMemo(() => shuffle(QUESTIONS).slice(0, Math.min(8, QUESTIONS.length)), []);
+  const params = useLocalSearchParams<{ stage?: string }>();
+  const stageId = (typeof params.stage === "string" ? params.stage : "beginner") as StageId;
+  const stage = STAGES.find((item) => item.id === stageId) ?? STAGES[0];
+  const questions = useMemo(() => {
+    const pool = getQuestionsForStage(stage.id);
+    return shuffle(pool).slice(0, Math.min(8, pool.length));
+  }, [stage.id]);
   const [current, setCurrent] = useState(0);
   const [answer, setAnswer] = useState("");
   const [selected, setSelected] = useState<string | null>(null);
@@ -32,11 +38,12 @@ export default function ExamScreen() {
   const type = EXAM_TYPES[current % EXAM_TYPES.length];
   const options = useMemo(() => {
     if (!question) return [];
-    if (type === "recognition") return shuffle([question.translation, ...QUESTIONS.filter((item) => item.word !== question.word).slice(0, 3).map((item) => item.translation)]);
-    if (type === "listening") return shuffle([question.word, ...QUESTIONS.filter((item) => item.word !== question.word).slice(0, 3).map((item) => item.word)]);
-    if (type === "context") return shuffle([question.word, ...QUESTIONS.filter((item) => item.word !== question.word).slice(0, 3).map((item) => item.word)]);
+    const pool = getQuestionsForStage(stage.id);
+    if (type === "recognition") return shuffle([question.translation, ...pool.filter((item) => item.word !== question.word).slice(0, 3).map((item) => item.translation)]);
+    if (type === "listening") return shuffle([question.word, ...pool.filter((item) => item.word !== question.word).slice(0, 3).map((item) => item.word)]);
+    if (type === "context") return shuffle([question.word, ...pool.filter((item) => item.word !== question.word).slice(0, 3).map((item) => item.word)]);
     return [];
-  }, [question, type]);
+  }, [question, type, stage.id]);
 
   useEffect(() => {
     if (!question) return;
@@ -67,7 +74,8 @@ export default function ExamScreen() {
     tap();
     if (current === questions.length - 1) {
       const finalScore = score + (isCorrect ? 1 : 0);
-      await recordLearningSession("考試模式", finalScore, Math.max(1, questions.length));
+      setScore(finalScore);
+      await recordLearningSession(`考試模式 · ${stage.name}`, questions.length, Math.max(1, questions.length));
       const record = await loadMastery();
       setFinalMastery(averageMastery(record));
       setCurrent(questions.length);
@@ -86,7 +94,7 @@ export default function ExamScreen() {
           <Text style={[styles.resultTitle, { color: colors.foreground }]}>考試完成</Text>
           <Text style={[styles.resultScore, { color: colors.foreground }]}>{shownScore}<Text style={[styles.resultTotal, { color: colors.muted }]}> / {questions.length}</Text></Text>
           <Text style={[styles.resultLabel, { color: colors.primary }]}>{masteryLabel(finalMastery)} · 整體熟練度 {finalMastery}%</Text>
-          <Text style={[styles.resultBody, { color: colors.muted }]}>考試會分別記錄英文辨識、聽音、拼字與語境理解能力，之後可用來安排複習。</Text>
+          <Text style={[styles.resultBody, { color: colors.muted }]}>本次考試涵蓋 {stage.name}，會分別記錄英文辨識、聽音、拼字與語境理解能力，之後可用來安排複習。</Text>
           <Pressable onPress={() => { tap(); router.replace("/exam"); }} style={({ pressed }) => [styles.primaryButton, { backgroundColor: colors.primary }, pressed && styles.pressed]}><Text style={styles.primaryButtonText}>再考一次</Text></Pressable>
           <Pressable onPress={() => router.replace("/")} style={({ pressed }) => [styles.secondaryButton, { borderColor: colors.border }, pressed && styles.pressed]}><Text style={[styles.secondaryText, { color: colors.foreground }]}>回到首頁</Text></Pressable>
         </View>

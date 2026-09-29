@@ -9,11 +9,14 @@ import { useColors } from "@/hooks/use-colors";
 import { incrementTodayWord, loadLearningRecord } from "@/lib/learning-storage";
 import { DAILY_GOAL, DAILY_NEW_WORDS, DAILY_REVIEW_WORDS, STAGES, type StageId } from "@/lib/word-practice";
 
+type LearningMode = "practice" | "exam";
+
 export default function HomeScreen() {
   const colors = useColors();
   const [completed, setCompleted] = useState(0);
   const [streak, setStreak] = useState(0);
   const [selectedStage, setSelectedStage] = useState<StageId>("beginner");
+  const [selectedMode, setSelectedMode] = useState<LearningMode>("practice");
   const progress = Math.min(completed / DAILY_GOAL, 1);
   const today = new Date().toLocaleDateString("zh-TW", { weekday: "long", month: "long", day: "numeric" });
 
@@ -37,7 +40,8 @@ export default function HomeScreen() {
 
   const startSelectedStage = () => {
     tap();
-    router.push({ pathname: "/(tabs)/practice", params: { stage: selectedStage } } as never);
+    if (selectedMode === "exam") router.push({ pathname: "/exam", params: { stage: selectedStage } } as never);
+    else router.push({ pathname: "/(tabs)/practice", params: { stage: selectedStage } } as never);
   };
 
   return (
@@ -63,6 +67,17 @@ export default function HomeScreen() {
         </View>
 
         <View style={[styles.webModeBanner, { backgroundColor: `${colors.primary}12`, borderColor: `${colors.primary}35` }]}><View style={[styles.webModeDot, { backgroundColor: colors.primary }]} /><Text style={[styles.webModeText, { color: colors.primary }]}>Wordly 網站練習版 · 可直接用瀏覽器學習</Text></View>
+
+        <View style={[styles.modeToggle, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <Pressable onPress={() => { tap(); setSelectedMode("practice"); }} style={({ pressed }) => [styles.modeToggleButton, selectedMode === "practice" && { backgroundColor: colors.success }, pressed && styles.pressed]}>
+            <IconSymbol name="bolt.fill" size={15} color={selectedMode === "practice" ? "#FFFFFF" : colors.muted} />
+            <Text style={[styles.modeToggleText, { color: selectedMode === "practice" ? "#FFFFFF" : colors.muted }]}>練習模式</Text>
+          </Pressable>
+          <Pressable onPress={() => { tap(); setSelectedMode("exam"); }} style={({ pressed }) => [styles.modeToggleButton, selectedMode === "exam" && { backgroundColor: colors.error }, pressed && styles.pressed]}>
+            <IconSymbol name="chart.bar.fill" size={15} color={selectedMode === "exam" ? "#FFFFFF" : colors.muted} />
+            <Text style={[styles.modeToggleText, { color: selectedMode === "exam" ? "#FFFFFF" : colors.muted }]}>考試模式 · 評估熟練度</Text>
+          </Pressable>
+        </View>
 
         <View style={[styles.progressCard, { backgroundColor: colors.foreground }]}> 
           <View style={styles.cardOrb} />
@@ -107,7 +122,7 @@ export default function HomeScreen() {
             );
           })}
         </View>
-        <Pressable onPress={startSelectedStage} style={({ pressed }) => [styles.levelButton, { backgroundColor: colors.primary }, pressed && styles.pressed]}><IconSymbol name="bolt.fill" size={17} color="#FFFFFF" /><Text style={styles.primaryButtonText}>開始 {STAGES.find((stage) => stage.id === selectedStage)?.name}學習</Text></Pressable>
+        <Pressable onPress={startSelectedStage} style={({ pressed }) => [styles.levelButton, { backgroundColor: selectedMode === "exam" ? colors.error : colors.primary }, pressed && styles.pressed]}><IconSymbol name={selectedMode === "exam" ? "chart.bar.fill" : "bolt.fill"} size={17} color="#FFFFFF" /><Text style={styles.primaryButtonText}>{selectedMode === "exam" ? "開始熟練度考試" : `開始 ${STAGES.find((stage) => stage.id === selectedStage)?.name}練習`}</Text></Pressable>
 
         <View style={styles.sectionHeading}>
           <Text style={[styles.sectionTitle, { color: colors.foreground }]}>選擇學習模式</Text>
@@ -119,12 +134,12 @@ export default function HomeScreen() {
             <Text style={[styles.modeTitle, { color: colors.foreground }]}>單字模式</Text>
             <Text style={[styles.modeHint, { color: colors.muted }]}>自動發音與熟悉度</Text>
           </Pressable>
-          <Pressable onPress={() => router.push("/(tabs)/practice")} style={({ pressed }) => [styles.modeCard, { backgroundColor: colors.surface, borderColor: colors.border }, pressed && styles.pressed]}>
+          <Pressable onPress={() => { tap(); setSelectedMode("practice"); }} style={({ pressed }) => [styles.modeCard, { backgroundColor: selectedMode === "practice" ? `${colors.success}12` : colors.surface, borderColor: selectedMode === "practice" ? colors.success : colors.border }, pressed && styles.pressed]}>
             <IconSymbol name="speaker.wave.2.fill" size={22} color={colors.success} />
             <Text style={[styles.modeTitle, { color: colors.foreground }]}>練習模式</Text>
             <Text style={[styles.modeHint, { color: colors.muted }]}>導讀、拼讀與例句</Text>
           </Pressable>
-          <Pressable onPress={() => router.push("/exam")} style={({ pressed }) => [styles.modeCard, styles.examCard, { backgroundColor: `${colors.error}10`, borderColor: `${colors.error}55` }, pressed && styles.pressed]}>
+          <Pressable onPress={() => { tap(); setSelectedMode("exam"); }} style={({ pressed }) => [styles.modeCard, styles.examCard, { backgroundColor: selectedMode === "exam" ? `${colors.error}18` : colors.surface, borderColor: selectedMode === "exam" ? colors.error : `${colors.error}55` }, pressed && styles.pressed]}>
             <IconSymbol name="chart.bar.fill" size={22} color={colors.error} />
             <Text style={[styles.modeTitle, { color: colors.foreground }]}>考試模式</Text>
             <Text style={[styles.modeHint, { color: colors.muted }]}>評估四項熟練度</Text>
@@ -160,9 +175,9 @@ export default function HomeScreen() {
         </Pressable>
 
         <View style={styles.actionRow}>
-          <Pressable onPress={() => { tap(); router.push("/(tabs)/practice"); }} style={({ pressed }) => [styles.primaryButton, { backgroundColor: colors.primary }, pressed && styles.pressed]}>
-            <IconSymbol name="bolt.fill" size={18} color="#FFFFFF" />
-            <Text style={styles.primaryButtonText}>Start 5-question quiz</Text>
+          <Pressable onPress={startSelectedStage} style={({ pressed }) => [styles.primaryButton, { backgroundColor: selectedMode === "exam" ? colors.error : colors.primary }, pressed && styles.pressed]}>
+            <IconSymbol name={selectedMode === "exam" ? "chart.bar.fill" : "bolt.fill"} size={18} color="#FFFFFF" />
+            <Text style={styles.primaryButtonText}>{selectedMode === "exam" ? "開始熟練度考試" : "開始今日練習"}</Text>
           </Pressable>
           <Pressable onPress={markWordLearned} style={({ pressed }) => [styles.smallButton, { backgroundColor: colors.surface, borderColor: colors.border }, pressed && styles.pressed]}>
             <IconSymbol name="checkmark.circle.fill" size={20} color={colors.success} />
@@ -189,6 +204,9 @@ const styles = StyleSheet.create({
   webModeBanner: { minHeight: 36, borderRadius: 12, borderWidth: 1, paddingHorizontal: 11, flexDirection: "row", alignItems: "center", gap: 8 },
   webModeDot: { width: 8, height: 8, borderRadius: 4 },
   webModeText: { fontSize: 11, fontWeight: "800" },
+  modeToggle: { minHeight: 54, borderRadius: 16, borderWidth: 1, padding: 4, flexDirection: "row", gap: 4 },
+  modeToggleButton: { flex: 1, minHeight: 44, borderRadius: 12, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6 },
+  modeToggleText: { fontSize: 12, fontWeight: "900" },
   progressCard: { minHeight: 205, borderRadius: 26, padding: 22, overflow: "hidden" },
   cardOrb: { position: "absolute", width: 180, height: 180, borderRadius: 90, right: -45, top: -75, backgroundColor: "#FFFFFF12" },
   progressTopline: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
