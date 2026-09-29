@@ -40,6 +40,25 @@ flowchart LR
 - 難度選擇會保存到本機，日期切換時自動取得當日內容。
 - ListenLoop 的每日完成紀錄與原本 Wordly 的 Records 分開保存，避免兩種學習資料互相覆蓋；後續可再做跨模組統計。
 
+### 網站版學習模式
+
+首頁提供三個清楚的入口：
+
+- **單字模式**：點選單字卡或切換下一字時自動播放美式英文發音；使用者可標記「我會了」或「需要複習」。
+- **練習模式**：保留導讀、拼讀、口語與例句流程，完成單字後記錄語境熟悉度。
+- **考試模式**：以英文辨識、聽音辨字、拼字、語境理解四種題型評估熟練度；交卷後才顯示結果。
+
+考試結果會寫入 `@wordly/mastery-v1`，每個單字分開保存：
+
+```text
+recognition  認字
+listening    聽字
+spelling     拼字
+context      語境
+```
+
+Records 會讀取這份資料，顯示整體熟練度與「熟練／良好／需要複習／尚未熟悉」狀態。
+
 ## 導覽結構
 
 | 分頁 | 主要目的 | 主要資料來源 |
@@ -67,6 +86,7 @@ lib/
   learning-storage.ts         # Wordly AsyncStorage 學習紀錄
   lesson-data.ts              # ListenLoop 30 天題庫與四級難度
   practice-progress.tsx       # ListenLoop AsyncStorage Provider
+  mastery-storage.ts          # 單字考試結果與熟練度 AsyncStorage
   pwa.ts                      # Web Service Worker 註冊
 
 public/

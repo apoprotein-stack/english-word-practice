@@ -108,6 +108,28 @@ export default function HomeScreen() {
         <Pressable onPress={startSelectedStage} style={({ pressed }) => [styles.levelButton, { backgroundColor: colors.primary }, pressed && styles.pressed]}><IconSymbol name="bolt.fill" size={17} color="#FFFFFF" /><Text style={styles.primaryButtonText}>開始 {STAGES.find((stage) => stage.id === selectedStage)?.name}學習</Text></Pressable>
 
         <View style={styles.sectionHeading}>
+          <Text style={[styles.sectionTitle, { color: colors.foreground }]}>選擇學習模式</Text>
+          <Text style={[styles.sectionMeta, { color: colors.muted }]}>網站版</Text>
+        </View>
+        <View style={styles.modeGrid}>
+          <Pressable onPress={() => router.push("/vocabulary")} style={({ pressed }) => [styles.modeCard, { backgroundColor: colors.surface, borderColor: colors.border }, pressed && styles.pressed]}>
+            <IconSymbol name="book.fill" size={22} color={colors.primary} />
+            <Text style={[styles.modeTitle, { color: colors.foreground }]}>單字模式</Text>
+            <Text style={[styles.modeHint, { color: colors.muted }]}>自動發音與熟悉度</Text>
+          </Pressable>
+          <Pressable onPress={() => router.push("/(tabs)/practice")} style={({ pressed }) => [styles.modeCard, { backgroundColor: colors.surface, borderColor: colors.border }, pressed && styles.pressed]}>
+            <IconSymbol name="speaker.wave.2.fill" size={22} color={colors.success} />
+            <Text style={[styles.modeTitle, { color: colors.foreground }]}>練習模式</Text>
+            <Text style={[styles.modeHint, { color: colors.muted }]}>導讀、拼讀與例句</Text>
+          </Pressable>
+          <Pressable onPress={() => router.push("/exam")} style={({ pressed }) => [styles.modeCard, styles.examCard, { backgroundColor: `${colors.error}10`, borderColor: `${colors.error}55` }, pressed && styles.pressed]}>
+            <IconSymbol name="chart.bar.fill" size={22} color={colors.error} />
+            <Text style={[styles.modeTitle, { color: colors.foreground }]}>考試模式</Text>
+            <Text style={[styles.modeHint, { color: colors.muted }]}>評估四項熟練度</Text>
+          </Pressable>
+        </View>
+
+        <View style={styles.sectionHeading}>
           <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Word of the day</Text>
           <Pressable onPress={() => router.push("/(tabs)/practice")} hitSlop={10}>
             <Text style={[styles.link, { color: colors.primary }]}>View all</Text>
@@ -192,6 +214,11 @@ const styles = StyleSheet.create({
   stageDescription: { fontSize: 10, marginTop: 3 },
   stageCount: { fontSize: 10, fontWeight: "800", marginTop: 3 },
   levelButton: { minHeight: 50, borderRadius: 16, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 },
+  modeGrid: { flexDirection: "row", gap: 8 },
+  modeCard: { flex: 1, minHeight: 107, borderRadius: 17, borderWidth: 1, padding: 12 },
+  examCard: { borderWidth: 1.2 },
+  modeTitle: { fontSize: 13, fontWeight: "900", marginTop: 10 },
+  modeHint: { fontSize: 10, lineHeight: 15, marginTop: 4 },
   topicChip: { flexDirection: "row", alignItems: "center", gap: 7, borderWidth: 1, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 10 },
   topicTextActive: { color: "#FFFFFF", fontSize: 13, fontWeight: "700" },
   topicText: { fontSize: 13, fontWeight: "700" },

@@ -7,6 +7,7 @@ import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
 import { DEFAULT_LEARNING_RECORD, loadLearningRecord, type LearningRecord } from "@/lib/learning-storage";
+import { averageMastery, loadMastery, masteryLabel } from "@/lib/mastery-storage";
 import { STAGES } from "@/lib/word-practice";
 
 const DAY_LABELS = ["一", "二", "三", "四", "五", "六", "日"];
@@ -14,10 +15,13 @@ const DAY_LABELS = ["一", "二", "三", "四", "五", "六", "日"];
 export default function ProgressScreen() {
   const colors = useColors();
   const [record, setRecord] = useState<LearningRecord>(DEFAULT_LEARNING_RECORD);
-  useEffect(() => { loadLearningRecord().then(setRecord); }, []);
+  const [masteryScore, setMasteryScore] = useState(0);
+  useEffect(() => {
+    loadLearningRecord().then(setRecord);
+    loadMastery().then((mastery) => setMasteryScore(averageMastery(mastery)));
+  }, []);
   const max = Math.max(...record.weekly, 1);
   const weekTotal = record.weekly.reduce((total, value) => total + value, 0);
-  const familiarity = record.totalWords === 0 ? 0 : Math.min(100, Math.round((record.totalWords / 50) * 100));
   const tap = () => {
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   };
@@ -39,7 +43,7 @@ export default function ProgressScreen() {
             <View style={styles.statsRow}>
               <View style={[styles.statCard, { backgroundColor: colors.foreground }]}><IconSymbol name="bolt.fill" size={17} color="#F4B942" /><Text style={styles.statNumber}>{record.streak}</Text><Text style={styles.statLabel}>連續天數</Text></View>
               <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}><IconSymbol name="book.fill" size={17} color={colors.primary} /><Text style={[styles.statNumber, { color: colors.foreground }]}>{record.totalWords}</Text><Text style={[styles.statLabel, { color: colors.muted }]}>已學單字</Text></View>
-              <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}><IconSymbol name="chart.bar.fill" size={17} color={colors.success} /><Text style={[styles.statNumber, { color: colors.foreground }]}>{familiarity}%</Text><Text style={[styles.statLabel, { color: colors.muted }]}>熟悉度</Text></View>
+              <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}><IconSymbol name="chart.bar.fill" size={17} color={colors.success} /><Text style={[styles.statNumber, { color: colors.foreground }]}>{masteryScore}%</Text><Text style={[styles.statLabel, { color: colors.muted }]}>{masteryScore === 0 ? "尚未評估" : masteryLabel(masteryScore)}</Text></View>
             </View>
             <View style={[styles.chartCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
               <View style={styles.cardHeader}><View><Text style={[styles.cardTitle, { color: colors.foreground }]}>本週學習量</Text><Text style={[styles.cardHint, { color: colors.muted }]}>每天目標 20 個單字</Text></View><Text style={[styles.weekTotal, { color: colors.primary }]}>{weekTotal} words</Text></View>

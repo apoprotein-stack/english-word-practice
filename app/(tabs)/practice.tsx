@@ -9,6 +9,7 @@ import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
 import { loadLearningRecord, recordLearningSession } from "@/lib/learning-storage";
+import { recordMastery } from "@/lib/mastery-storage";
 import { DAILY_NEW_WORDS, DAILY_REVIEW_WORDS, getDailyWordPlan, STAGES, type StageId } from "@/lib/word-practice";
 
 type Phase = "preview" | "spell" | "speak" | "example";
@@ -96,10 +97,11 @@ export default function PracticeScreen() {
 
   useEffect(() => () => { Speech.stop(); }, []);
 
-  const nextPhase = () => {
+  const nextPhase = async () => {
     tap();
     if (phaseIndex < PHASES.length - 1) setPhase(PHASES[phaseIndex + 1]);
     else {
+      await recordMastery(question.word, "context", true);
       if (current === words.length - 1) void recordLearningSession(stage.name, words.length, undefined, words.map((item) => item.word));
       setCurrent((value) => value + 1);
       setPhase("preview");
