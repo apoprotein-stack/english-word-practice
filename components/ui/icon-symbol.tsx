@@ -33,6 +33,7 @@ const MAPPING = {
   "stop.circle.fill": "stop-circle",
   "chart.bar.fill": "bar-chart",
   headphones: "headset",
+  calendar: "event",
 } as IconMapping;
 
 /**

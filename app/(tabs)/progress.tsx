@@ -42,7 +42,7 @@ export default function ProgressScreen() {
               <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}><IconSymbol name="chart.bar.fill" size={17} color={colors.success} /><Text style={[styles.statNumber, { color: colors.foreground }]}>{familiarity}%</Text><Text style={[styles.statLabel, { color: colors.muted }]}>熟悉度</Text></View>
             </View>
             <View style={[styles.chartCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-              <View style={styles.cardHeader}><View><Text style={[styles.cardTitle, { color: colors.foreground }]}>本週學習量</Text><Text style={[styles.cardHint, { color: colors.muted }]}>每天目標 10 個單字</Text></View><Text style={[styles.weekTotal, { color: colors.primary }]}>{weekTotal} words</Text></View>
+              <View style={styles.cardHeader}><View><Text style={[styles.cardTitle, { color: colors.foreground }]}>本週學習量</Text><Text style={[styles.cardHint, { color: colors.muted }]}>每天目標 20 個單字</Text></View><Text style={[styles.weekTotal, { color: colors.primary }]}>{weekTotal} words</Text></View>
               <View style={styles.chart}><View style={styles.gridLine} /><View style={[styles.gridLine, { top: 34 }]} /><View style={[styles.gridLine, { top: 68 }]} /><View style={styles.bars}>{record.weekly.map((count, index) => <View key={DAY_LABELS[index]} style={styles.barColumn}><View style={[styles.bar, { height: Math.max(5, (count / max) * 68), backgroundColor: count > 0 ? STAGES[index % STAGES.length].color : colors.border }]} /><Text style={[styles.day, { color: colors.muted }]}>{DAY_LABELS[index]}</Text></View>)}</View></View>
             </View>
             <View style={styles.sectionHeader}><Text style={[styles.sectionTitle, { color: colors.foreground }]}>最近活動</Text><Text style={[styles.sectionHint, { color: colors.muted }]}>共 {record.sessions.length} 次</Text></View>
@@ -50,7 +50,7 @@ export default function ProgressScreen() {
         }
         renderItem={({ item }) => { const itemColor = colorForSession(item.label); return <View style={[styles.session, { backgroundColor: colors.surface, borderColor: colors.border }]}><View style={[styles.sessionDot, { backgroundColor: itemColor }]} /><View style={styles.sessionInfo}><Text style={[styles.sessionLabel, { color: colors.foreground }]}>{item.label}</Text><Text style={[styles.sessionDate, { color: colors.muted }]}>{item.date} · {item.minutes} 分鐘</Text></View><Text style={[styles.sessionWords, { color: itemColor }]}>{item.words} 字</Text></View>; }}
         ListEmptyComponent={<View style={styles.empty}><IconSymbol name="book.fill" size={28} color={colors.muted} /><Text style={[styles.emptyTitle, { color: colors.foreground }]}>還沒有學習記錄</Text><Text style={[styles.emptyText, { color: colors.muted }]}>完成一輪練習後，紀錄會自動保存在本機。</Text></View>}
-        ListFooterComponent={<View style={[styles.footerTip, { backgroundColor: `${colors.warning}18` }]}><IconSymbol name="star.fill" size={18} color={colors.warning} /><Text style={[styles.footerText, { color: colors.foreground }]}>完成每日 10 字目標，持續 7 天就能建立穩定習慣。</Text></View>}
+        ListFooterComponent={<View style={[styles.footerTip, { backgroundColor: `${colors.warning}18` }]}><IconSymbol name="star.fill" size={18} color={colors.warning} /><Text style={[styles.footerText, { color: colors.foreground }]}>完成每日 20 字目標，持續 7 天就能建立穩定習慣。</Text></View>}
       />
     </ScreenContainer>
   );

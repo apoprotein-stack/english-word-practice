@@ -1,5 +1,7 @@
 export type StageId = "beginner" | "intermediate" | "advanced" | "expert";
-export const DAILY_GOAL = 10;
+export const DAILY_NEW_WORDS = 10;
+export const DAILY_REVIEW_WORDS = 10;
+export const DAILY_GOAL = DAILY_NEW_WORDS + DAILY_REVIEW_WORDS;
 
 export type Stage = { id: StageId; name: string; english: string; description: string; wordCount: number; color: string };
 
@@ -33,6 +35,18 @@ export const QUESTIONS: Question[] = [
 
 export function getQuestionsForStage(stage: StageId): Question[] {
   return QUESTIONS.filter((question) => question.stage === stage);
+}
+
+export function getDailyWordPlan(stage: StageId, date = new Date()): { newWords: Question[]; reviewWords: Question[] } {
+  const pool = getQuestionsForStage(stage);
+  if (pool.length === 0) return { newWords: [], reviewWords: [] };
+  const dateSeed = Number(`${date.getFullYear()}${date.getMonth() + 1}${date.getDate()}`);
+  const offset = dateSeed % pool.length;
+  const ordered = pool.slice(offset).concat(pool.slice(0, offset));
+  return {
+    newWords: ordered.slice(0, Math.min(DAILY_NEW_WORDS, ordered.length)),
+    reviewWords: ordered.slice(DAILY_NEW_WORDS, DAILY_NEW_WORDS + DAILY_REVIEW_WORDS).concat(ordered.slice(0, Math.max(0, DAILY_REVIEW_WORDS - Math.max(0, ordered.length - DAILY_NEW_WORDS)))).slice(0, DAILY_REVIEW_WORDS),
+  };
 }
 
 export function scoreAnswers(answers: Array<string | null>): number {

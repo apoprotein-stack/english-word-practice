@@ -7,7 +7,7 @@ import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
 import { incrementTodayWord, loadLearningRecord } from "@/lib/learning-storage";
-import { DAILY_GOAL, STAGES, type StageId } from "@/lib/word-practice";
+import { DAILY_GOAL, DAILY_NEW_WORDS, DAILY_REVIEW_WORDS, STAGES, type StageId } from "@/lib/word-practice";
 
 export default function HomeScreen() {
   const colors = useColors();
@@ -15,6 +15,7 @@ export default function HomeScreen() {
   const [streak, setStreak] = useState(0);
   const [selectedStage, setSelectedStage] = useState<StageId>("beginner");
   const progress = Math.min(completed / DAILY_GOAL, 1);
+  const today = new Date().toLocaleDateString("zh-TW", { weekday: "long", month: "long", day: "numeric" });
 
   useEffect(() => {
     loadLearningRecord().then((record) => {
@@ -47,7 +48,7 @@ export default function HomeScreen() {
       >
         <View style={styles.header}>
           <View>
-            <Text style={[styles.eyebrow, { color: colors.muted }]}>SUNDAY · SEPT 27</Text>
+            <Text style={[styles.eyebrow, { color: colors.muted }]}>{today.toUpperCase()}</Text>
             <Text style={[styles.greeting, { color: colors.foreground }]}>Keep your streak alive.</Text>
           </View>
           <Pressable
@@ -83,8 +84,13 @@ export default function HomeScreen() {
           <Text style={styles.progressHint}>{DAILY_GOAL - completed === 0 ? "Goal complete — lovely work." : `${DAILY_GOAL - completed} words left to reach today's goal.`}</Text>
         </View>
 
+        <View style={[styles.planCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <View style={[styles.planIcon, { backgroundColor: `${colors.primary}18` }]}><IconSymbol name="calendar" size={19} color={colors.primary} /></View>
+          <View style={styles.planCopy}><Text style={[styles.planTitle, { color: colors.foreground }]}>今日學習計畫 · {DAILY_GOAL} 字</Text><Text style={[styles.planSubtitle, { color: colors.muted }]}>{DAILY_NEW_WORDS} 個新單字 + {DAILY_REVIEW_WORDS} 個複習單字 · 依日期自動安排</Text></View>
+        </View>
+
         <View style={styles.sectionHeading}>
-          <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Choose your level</Text>
+          <Text style={[styles.sectionTitle, { color: colors.foreground }]}>先選擇學習難度</Text>
           <Text style={[styles.sectionMeta, { color: colors.muted }]}>4 stages</Text>
         </View>
         <View style={styles.stageGrid}>
@@ -169,6 +175,11 @@ const styles = StyleSheet.create({
   track: { height: 7, borderRadius: 4, backgroundColor: "#FFFFFF25", overflow: "hidden", marginTop: 11 },
   trackFill: { height: "100%", borderRadius: 4, backgroundColor: "#F4B942" },
   progressHint: { color: "#FFFFFF90", fontSize: 12, marginTop: 9 },
+  planCard: { minHeight: 70, borderRadius: 18, borderWidth: 1.5, padding: 13, flexDirection: "row", alignItems: "center" },
+  planIcon: { width: 40, height: 40, borderRadius: 13, alignItems: "center", justifyContent: "center" },
+  planCopy: { flex: 1, marginLeft: 11 },
+  planTitle: { fontSize: 14, fontWeight: "900" },
+  planSubtitle: { fontSize: 11, lineHeight: 16, marginTop: 3 },
   sectionHeading: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: -12 },
   sectionTitle: { fontSize: 18, fontWeight: "800", letterSpacing: -0.2 },
   sectionMeta: { fontSize: 13, fontWeight: "600" },
@@ -185,7 +196,7 @@ const styles = StyleSheet.create({
   topicTextActive: { color: "#FFFFFF", fontSize: 13, fontWeight: "700" },
   topicText: { fontSize: 13, fontWeight: "700" },
   link: { fontSize: 13, fontWeight: "800" },
-  wordCard: { borderRadius: 22, borderWidth: 1, overflow: "hidden" },
+  wordCard: { borderRadius: 22, borderWidth: 2, overflow: "hidden", shadowColor: "#17202A", shadowOpacity: 0.1, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 3 },
   wordCardTop: { flexDirection: "row", alignItems: "center", padding: 19 },
   wordIcon: { width: 46, height: 46, borderRadius: 14, alignItems: "center", justifyContent: "center" },
   wordIconText: { fontSize: 18, fontWeight: "900" },

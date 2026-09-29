@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { DAILY_GOAL, QUESTIONS, STAGES, getQuestionsForStage, scoreAnswers } from "../lib/word-practice";
+import { DAILY_GOAL, DAILY_NEW_WORDS, DAILY_REVIEW_WORDS, QUESTIONS, STAGES, getDailyWordPlan, getQuestionsForStage, scoreAnswers } from "../lib/word-practice";
 import { DEFAULT_LEARNING_RECORD, LEARNING_STORAGE_KEY, loadLearningRecord, saveLearningRecord } from "../lib/learning-storage";
 
 const storage = new Map<string, string>();
@@ -14,8 +14,10 @@ vi.mock("@react-native-async-storage/async-storage", () => ({
 beforeEach(() => storage.clear());
 
 describe("Wordly learning stages", () => {
-  it("sets a ten-word daily goal", () => {
-    expect(DAILY_GOAL).toBe(10);
+  it("sets a twenty-word daily goal with an even new-review split", () => {
+    expect(DAILY_GOAL).toBe(20);
+    expect(DAILY_NEW_WORDS).toBe(10);
+    expect(DAILY_REVIEW_WORDS).toBe(10);
   });
 
   it("defines the four requested learning stages", () => {
@@ -33,6 +35,14 @@ describe("Wordly learning stages", () => {
   it("scores matching answers by position", () => {
     expect(scoreAnswers(["curious", "wrong", "ambiguous"])).toBe(1);
     expect(scoreAnswers([])).toBe(0);
+  });
+
+  it("creates a date-based new and review word plan", () => {
+    const plan = getDailyWordPlan("beginner", new Date(2026, 8, 29));
+    expect(plan.newWords.every((word) => word.stage === "beginner")).toBe(true);
+    expect(plan.reviewWords.every((word) => word.stage === "beginner")).toBe(true);
+    expect(plan.newWords.length).toBeLessThanOrEqual(DAILY_NEW_WORDS);
+    expect(plan.reviewWords.length).toBeLessThanOrEqual(DAILY_REVIEW_WORDS);
   });
 
   it("persists a learning record through the storage adapter", async () => {

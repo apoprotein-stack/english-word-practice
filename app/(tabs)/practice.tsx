@@ -9,7 +9,7 @@ import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
 import { recordLearningSession } from "@/lib/learning-storage";
-import { getQuestionsForStage, STAGES, type StageId } from "@/lib/word-practice";
+import { DAILY_NEW_WORDS, DAILY_REVIEW_WORDS, getDailyWordPlan, STAGES, type StageId } from "@/lib/word-practice";
 
 type Phase = "preview" | "spell" | "speak" | "example";
 const PHASES: Phase[] = ["preview", "spell", "speak", "example"];
@@ -19,7 +19,8 @@ export default function PracticeScreen() {
   const params = useLocalSearchParams<{ stage?: string }>();
   const stageId = (typeof params.stage === "string" ? params.stage : "beginner") as StageId;
   const stage = STAGES.find((item) => item.id === stageId) ?? STAGES[0];
-  const words = useMemo(() => getQuestionsForStage(stage.id), [stage.id]);
+  const dailyPlan = useMemo(() => getDailyWordPlan(stage.id, new Date()), [stage.id]);
+  const words = useMemo(() => [...dailyPlan.newWords, ...dailyPlan.reviewWords], [dailyPlan]);
   const [current, setCurrent] = useState(0);
   const [phase, setPhase] = useState<Phase>("preview");
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
@@ -27,6 +28,7 @@ export default function PracticeScreen() {
   const question = words[current];
   const finished = !question;
   const phaseIndex = PHASES.indexOf(phase);
+  const isReviewWord = current >= dailyPlan.newWords.length;
 
   useEffect(() => {
     requestRecordingPermissionsAsync().then((permission) => {
@@ -147,7 +149,7 @@ export default function PracticeScreen() {
         <View style={styles.phaseRow}>{PHASES.map((item, index) => <View key={item} style={styles.phaseItem}><View style={[styles.phaseDot, { backgroundColor: index <= phaseIndex ? stage.color : colors.border }]} /><Text style={[styles.phaseText, { color: index === phaseIndex ? colors.foreground : colors.muted }]}>{index + 1}. {item === "preview" ? "導讀" : item === "spell" ? "拼讀" : item === "speak" ? "口語" : "例句"}</Text></View>)}</View>
 
         <View style={styles.learningArea}>
-          <Text style={[styles.phaseEyebrow, { color: colors.muted }]}>{phaseTitle.toUpperCase()}</Text>
+          <Text style={[styles.phaseEyebrow, { color: colors.muted }]}>{isReviewWord ? `複習單字 ${current - dailyPlan.newWords.length + 1}/${DAILY_REVIEW_WORDS}` : `新單字 ${current + 1}/${DAILY_NEW_WORDS}`} · {phaseTitle.toUpperCase()}</Text>
           <View style={[styles.wordCard, { backgroundColor: colors.foreground }]}>
             <View style={styles.cardOrb} />
             <Text style={styles.word}>{question.word}</Text>
