@@ -1,0 +1,13 @@
+[build]
+  command = "pnpm pwa:export"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+  PNPM_VERSION = "9.12.0"
+
+# Expo Router client-side routes should fall back to the app shell.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
