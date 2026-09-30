@@ -162,6 +162,7 @@ export default function PracticeScreen() {
             <View style={styles.cardOrb} />
             <Text style={styles.word}>{question.word}</Text>
             <Text style={styles.pronunciation}>{question.pronunciation}</Text>
+            <Text style={styles.cardTranslation}>中文對照：{question.translation}</Text>
             <Text style={styles.partOfSpeech}>{question.partOfSpeech.toUpperCase()} · LONGMAN DICTIONARY 參照</Text>
             <Pressable onPress={() => speak(phase === "spell" ? question.word.split("").join(", ") : phase === "example" ? question.example : question.word, phase === "spell" ? 0.82 : phase === "example" ? 0.9 : 0.98)} style={({ pressed }) => [styles.audioButton, pressed && styles.pressed]}><IconSymbol name="speaker.wave.2.fill" size={17} color="#FFFFFF" /><Text style={styles.audioText}>{phase === "spell" ? "聽拼讀示範" : phase === "example" ? "聽例句" : "聽發音"}</Text></Pressable>
           </View>
@@ -198,6 +199,7 @@ const styles = StyleSheet.create({
   cardOrb: { position: "absolute", width: 170, height: 170, borderRadius: 85, right: -50, top: -70, backgroundColor: "#FFFFFF10" },
   word: { color: "#FFFFFF", fontSize: 39, lineHeight: 46, fontWeight: "900", letterSpacing: -1.1 },
   pronunciation: { color: "#FFFFFFB8", fontSize: 15, marginTop: 4 },
+  cardTranslation: { color: "#FFFFFF", fontSize: 16, fontWeight: "800", marginTop: 8 },
   partOfSpeech: { color: "#FFFFFF80", fontSize: 9, letterSpacing: 1, fontWeight: "800", marginTop: 17 },
   audioButton: { flexDirection: "row", alignItems: "center", alignSelf: "flex-start", gap: 7, borderRadius: 14, backgroundColor: "#FFFFFF18", paddingHorizontal: 11, paddingVertical: 8, marginTop: 16 },
   audioText: { color: "#FFFFFF", fontSize: 12, fontWeight: "800" },

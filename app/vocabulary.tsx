@@ -63,6 +63,7 @@ export default function VocabularyScreen() {
             <View style={styles.orb} />
             <Text style={styles.word}>{question.word}</Text>
             <Text style={styles.pronunciation}>{question.pronunciation}</Text>
+            <Text style={styles.cardTranslation}>中文對照：{question.translation}</Text>
             <View style={styles.audio}><IconSymbol name="speaker.wave.2.fill" size={18} color="#FFFFFF" /><Text style={styles.audioText}>自動播放 · 點擊重播</Text></View>
           </Pressable>
           <View style={[styles.definitionCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
@@ -99,6 +100,7 @@ const styles = StyleSheet.create({
   orb: { position: "absolute", width: 210, height: 210, borderRadius: 105, right: -56, top: -82, backgroundColor: "#FFFFFF12" },
   word: { color: "#FFFFFF", fontSize: 47, lineHeight: 55, fontWeight: "900", letterSpacing: -1.4 },
   pronunciation: { color: "#FFFFFFB8", fontSize: 16, marginTop: 5 },
+  cardTranslation: { color: "#FFFFFF", fontSize: 18, fontWeight: "800", marginTop: 8 },
   audio: { flexDirection: "row", alignItems: "center", gap: 7, backgroundColor: "#FFFFFF1A", borderRadius: 15, paddingHorizontal: 13, paddingVertical: 9, marginTop: 20 },
   audioText: { color: "#FFFFFF", fontSize: 12, fontWeight: "800" },
   definitionCard: { borderRadius: 20, borderWidth: 1, padding: 18 },

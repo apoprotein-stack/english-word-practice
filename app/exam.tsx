@@ -116,7 +116,7 @@ export default function ExamScreen() {
           {type === "listening" && <Text style={[styles.prompt, { color: colors.foreground }]}>你聽到的是哪個單字？</Text>}
           {type === "recognition" && <Text style={[styles.wordPrompt, { color: colors.primary }]}>{question.word}</Text>}
           {(type === "recognition" || type === "listening" || type === "context") && <View style={styles.options}>{options.map((item) => { const active = selected === item; const correct = submitted && item.toLowerCase() === expected.toLowerCase(); const wrong = submitted && active && !correct; return <Pressable key={item} disabled={submitted} onPress={() => { tap(); setSelected(item); }} style={({ pressed }) => [styles.option, { backgroundColor: correct ? `${colors.success}18` : wrong ? `${colors.error}18` : active ? `${colors.primary}18` : colors.surface, borderColor: correct ? colors.success : wrong ? colors.error : active ? colors.primary : colors.border }, pressed && styles.pressed]}><Text style={[styles.optionText, { color: correct ? colors.success : wrong ? colors.error : colors.foreground }]}>{item}</Text>{correct && <IconSymbol name="checkmark.circle.fill" size={19} color={colors.success} />}</Pressable>; })}</View>}
-          {submitted && <View style={[styles.feedback, { backgroundColor: isCorrect ? `${colors.success}18` : `${colors.error}18` }]}><Text style={[styles.feedbackTitle, { color: isCorrect ? colors.success : colors.error }]}>{isCorrect ? "答對了" : `正確答案：${expected}`}</Text><Text style={[styles.feedbackBody, { color: colors.foreground }]}>{isCorrect ? "這次表現會提升你的熟練度。" : "這個單字會加入後續複習紀錄。"}</Text></View>}
+          {submitted && <View style={[styles.feedback, { backgroundColor: isCorrect ? `${colors.success}18` : `${colors.error}18` }]}><Text style={[styles.feedbackTitle, { color: isCorrect ? colors.success : colors.error }]}>{isCorrect ? "答對了" : `正確答案：${expected}`}</Text><Text style={[styles.feedbackBody, { color: colors.foreground }]}>{isCorrect ? "這次表現會提升你的熟練度。" : "這個單字會加入後續複習紀錄。"}</Text><Text style={[styles.feedbackTranslation, { color: colors.primary }]}>中文對照：{question.translation}</Text></View>}
         </View>
         <Pressable disabled={!currentAnswer} onPress={submitted ? next : submit} style={({ pressed }) => [styles.nextButton, { backgroundColor: currentAnswer ? colors.error : colors.border }, pressed && styles.pressed]}><Text style={styles.nextText}>{submitted ? current === questions.length - 1 ? "查看結果" : "下一題" : "提交答案"}</Text><IconSymbol name="arrow.right" size={18} color="#FFFFFF" /></Pressable>
       </View>
@@ -152,6 +152,7 @@ const styles = StyleSheet.create({
   feedback: { borderRadius: 16, padding: 14 },
   feedbackTitle: { fontSize: 15, fontWeight: "900" },
   feedbackBody: { fontSize: 12, marginTop: 4 },
+  feedbackTranslation: { fontSize: 13, fontWeight: "800", marginTop: 8 },
   nextButton: { minHeight: 55, borderRadius: 17, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 9 },
   nextText: { color: "#FFFFFF", fontSize: 15, fontWeight: "800" },
   result: { flex: 1, alignItems: "center", justifyContent: "center", paddingBottom: 20 },
