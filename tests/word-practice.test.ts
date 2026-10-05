@@ -32,8 +32,10 @@ describe("Wordly learning stages", () => {
   });
 
   it("keeps words grouped by stage", () => {
-    expect(getQuestionsForStage("beginner")).toHaveLength(2);
-    expect(getQuestionsForStage("expert")).toHaveLength(2);
+    expect(getQuestionsForStage("beginner").length).toBeGreaterThanOrEqual(10);
+    expect(getQuestionsForStage("intermediate").length).toBeGreaterThanOrEqual(10);
+    expect(getQuestionsForStage("advanced").length).toBeGreaterThanOrEqual(10);
+    expect(getQuestionsForStage("expert").length).toBeGreaterThanOrEqual(10);
     expect(QUESTIONS.every((question) => question.example && question.pronunciation)).toBe(true);
   });
 

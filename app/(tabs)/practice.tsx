@@ -68,48 +68,59 @@ export default function PracticeScreen() {
     let timer: ReturnType<typeof setTimeout> | undefined;
     Speech.stop();
 
+    const speakWithFallback = (text: string, options: Speech.SpeechOptions, onDone: () => void) => {
+      let completed = false;
+      const finish = () => {
+        if (completed || cancelled) return;
+        completed = true;
+        if (timer) clearTimeout(timer);
+        onDone();
+      };
+      Speech.speak(text, { ...options, onDone: finish, onError: finish });
+      if (autoMode) {
+        const estimatedMs = Math.max(1500, Math.min(9000, Math.round((text.length * 95) / (options.rate ?? 1))));
+        timer = setTimeout(finish, estimatedMs);
+      }
+    };
+
     if (phase === "preview") {
       // 自動播放模式會依序朗讀英文、中文，再進入拼讀，不等待使用者回應。
-      Speech.speak(question.word, {
+      speakWithFallback(question.word, {
         language: "en-US",
         rate: 0.98,
         volume: 1,
-        onDone: () => {
+      }, () => {
           if (cancelled) return;
           if (!autoMode) {
             setPhase("spell");
             return;
           }
-          Speech.speak(question.translation, { language: "zh-TW", rate: 1, volume: 1, onDone: () => { if (!cancelled) setPhase("spell"); } });
-        },
+          speakWithFallback(question.translation, { language: "zh-TW", rate: 1, volume: 1 }, () => { if (!cancelled) setPhase("spell"); });
       });
     } else if (phase === "spell") {
       // 自動逐字母拼讀，完成後再播放完整單字；自動播放模式直接進入例句。
-      Speech.speak(question.word.split("").join(", "), {
+      speakWithFallback(question.word.split("").join(", "), {
         language: "en-US",
         rate: autoMode ? 0.98 : 0.88,
         volume: 1,
-        onDone: () => {
+      }, () => {
           if (cancelled) return;
-          Speech.speak(question.word, {
+          speakWithFallback(question.word, {
             language: "en-US",
             rate: 0.98,
             volume: 1,
-            onDone: () => {
+          }, () => {
               if (!cancelled) setPhase(autoMode ? "example" : "speak");
-            },
           });
-        },
       });
     } else if (autoMode && phase === "example") {
-      Speech.speak(question.example, {
+      speakWithFallback(question.example, {
         language: "en-US",
         rate: 0.9,
         volume: 1,
-        onDone: () => {
+      }, () => {
           if (cancelled) return;
           timer = setTimeout(() => { void advanceToNextWord(); }, 850);
-        },
       });
     } else if (phase === "example") {
       speak(question.example, 0.9);
@@ -196,7 +207,7 @@ export default function PracticeScreen() {
           {phase === "example" && <View style={[styles.infoCard, { backgroundColor: colors.surface, borderColor: colors.border }]}><Text style={[styles.exampleLabel, { color: colors.primary }]}>IN CONTEXT</Text><Text style={[styles.example, { color: colors.foreground }]}>{question.example}</Text><Text style={[styles.translation, { color: colors.muted }]}>把這個單字放進真實語境裡記住它。</Text></View>}
         </View>
 
-        <Pressable onPress={phase === "speak" ? (recorderState.isRecording ? toggleRecording : nextPhase) : nextPhase} style={({ pressed }) => [styles.nextButton, { backgroundColor: stage.color }, pressed && styles.pressed]}><Text style={styles.nextButtonText}>{buttonLabel}</Text><IconSymbol name="arrow.right" size={18} color="#FFFFFF" /></Pressable>
+        <Pressable disabled={autoMode} onPress={phase === "speak" ? (recorderState.isRecording ? toggleRecording : nextPhase) : nextPhase} style={({ pressed }) => [styles.nextButton, { backgroundColor: stage.color, opacity: autoMode ? 0.55 : 1 }, pressed && styles.pressed]}><Text style={styles.nextButtonText}>{buttonLabel}</Text><IconSymbol name="arrow.right" size={18} color="#FFFFFF" /></Pressable>
       </View>
     </ScreenContainer>
   );
