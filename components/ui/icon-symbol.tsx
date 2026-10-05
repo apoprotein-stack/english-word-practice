@@ -27,6 +27,7 @@ const MAPPING = {
   star: "star-border",
   "magnifyingglass": "search",
   "speaker.wave.2.fill": "volume-up",
+  "play.circle.fill": "play-circle-filled",
   "checkmark.circle.fill": "check-circle",
   "xmark.circle.fill": "cancel",
   "mic.fill": "mic",

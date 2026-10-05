@@ -9,7 +9,7 @@ import { useColors } from "@/hooks/use-colors";
 import { incrementTodayWord, loadLearningRecord } from "@/lib/learning-storage";
 import { DAILY_GOAL, DAILY_NEW_WORDS, DAILY_REVIEW_WORDS, STAGES, type StageId } from "@/lib/word-practice";
 
-type LearningMode = "practice" | "exam";
+type LearningMode = "practice" | "auto" | "exam";
 
 export default function HomeScreen() {
   const colors = useColors();
@@ -41,7 +41,7 @@ export default function HomeScreen() {
   const startSelectedStage = () => {
     tap();
     if (selectedMode === "exam") router.push({ pathname: "/exam", params: { stage: selectedStage } } as never);
-    else router.push({ pathname: "/(tabs)/practice", params: { stage: selectedStage } } as never);
+    else router.push({ pathname: "/(tabs)/practice", params: { stage: selectedStage, mode: selectedMode } } as never);
   };
 
   return (
@@ -72,6 +72,10 @@ export default function HomeScreen() {
           <Pressable onPress={() => { tap(); setSelectedMode("practice"); }} style={({ pressed }) => [styles.modeToggleButton, selectedMode === "practice" && { backgroundColor: colors.success }, pressed && styles.pressed]}>
             <IconSymbol name="bolt.fill" size={15} color={selectedMode === "practice" ? "#FFFFFF" : colors.muted} />
             <Text style={[styles.modeToggleText, { color: selectedMode === "practice" ? "#FFFFFF" : colors.muted }]}>練習模式</Text>
+          </Pressable>
+          <Pressable onPress={() => { tap(); setSelectedMode("auto"); }} style={({ pressed }) => [styles.modeToggleButton, selectedMode === "auto" && { backgroundColor: colors.primary }, pressed && styles.pressed]}>
+            <IconSymbol name="play.circle.fill" size={15} color={selectedMode === "auto" ? "#FFFFFF" : colors.muted} />
+            <Text style={[styles.modeToggleText, { color: selectedMode === "auto" ? "#FFFFFF" : colors.muted }]}>自動播放</Text>
           </Pressable>
           <Pressable onPress={() => { tap(); setSelectedMode("exam"); }} style={({ pressed }) => [styles.modeToggleButton, selectedMode === "exam" && { backgroundColor: colors.error }, pressed && styles.pressed]}>
             <IconSymbol name="chart.bar.fill" size={15} color={selectedMode === "exam" ? "#FFFFFF" : colors.muted} />
@@ -122,7 +126,7 @@ export default function HomeScreen() {
             );
           })}
         </View>
-        <Pressable onPress={startSelectedStage} style={({ pressed }) => [styles.levelButton, { backgroundColor: selectedMode === "exam" ? colors.error : colors.primary }, pressed && styles.pressed]}><IconSymbol name={selectedMode === "exam" ? "chart.bar.fill" : "bolt.fill"} size={17} color="#FFFFFF" /><Text style={styles.primaryButtonText}>{selectedMode === "exam" ? "開始熟練度考試" : `開始 ${STAGES.find((stage) => stage.id === selectedStage)?.name}練習`}</Text></Pressable>
+        <Pressable onPress={startSelectedStage} style={({ pressed }) => [styles.levelButton, { backgroundColor: selectedMode === "exam" ? colors.error : colors.primary }, pressed && styles.pressed]}><IconSymbol name={selectedMode === "exam" ? "chart.bar.fill" : selectedMode === "auto" ? "play.circle.fill" : "bolt.fill"} size={17} color="#FFFFFF" /><Text style={styles.primaryButtonText}>{selectedMode === "exam" ? "開始熟練度考試" : selectedMode === "auto" ? "開始自動播放" : `開始 ${STAGES.find((stage) => stage.id === selectedStage)?.name}練習`}</Text></Pressable>
 
         <View style={styles.sectionHeading}>
           <Text style={[styles.sectionTitle, { color: colors.foreground }]}>選擇學習模式</Text>
@@ -133,6 +137,11 @@ export default function HomeScreen() {
             <IconSymbol name="book.fill" size={22} color={colors.primary} />
             <Text style={[styles.modeTitle, { color: colors.foreground }]}>單字模式</Text>
             <Text style={[styles.modeHint, { color: colors.muted }]}>自動發音與熟悉度</Text>
+          </Pressable>
+          <Pressable onPress={() => { tap(); setSelectedMode("auto"); }} style={({ pressed }) => [styles.modeCard, { backgroundColor: selectedMode === "auto" ? `${colors.primary}18` : colors.surface, borderColor: selectedMode === "auto" ? colors.primary : colors.border }, pressed && styles.pressed]}>
+            <IconSymbol name="play.circle.fill" size={22} color={colors.primary} />
+            <Text style={[styles.modeTitle, { color: colors.foreground }]}>自動播放模式</Text>
+            <Text style={[styles.modeHint, { color: colors.muted }]}>自動朗讀，不等待回應</Text>
           </Pressable>
           <Pressable onPress={() => { tap(); setSelectedMode("practice"); }} style={({ pressed }) => [styles.modeCard, { backgroundColor: selectedMode === "practice" ? `${colors.success}12` : colors.surface, borderColor: selectedMode === "practice" ? colors.success : colors.border }, pressed && styles.pressed]}>
             <IconSymbol name="speaker.wave.2.fill" size={22} color={colors.success} />
@@ -176,8 +185,8 @@ export default function HomeScreen() {
 
         <View style={styles.actionRow}>
           <Pressable onPress={startSelectedStage} style={({ pressed }) => [styles.primaryButton, { backgroundColor: selectedMode === "exam" ? colors.error : colors.primary }, pressed && styles.pressed]}>
-            <IconSymbol name={selectedMode === "exam" ? "chart.bar.fill" : "bolt.fill"} size={18} color="#FFFFFF" />
-            <Text style={styles.primaryButtonText}>{selectedMode === "exam" ? "開始熟練度考試" : "開始今日練習"}</Text>
+            <IconSymbol name={selectedMode === "exam" ? "chart.bar.fill" : selectedMode === "auto" ? "play.circle.fill" : "bolt.fill"} size={18} color="#FFFFFF" />
+            <Text style={styles.primaryButtonText}>{selectedMode === "exam" ? "開始熟練度考試" : selectedMode === "auto" ? "開始自動播放" : "開始今日練習"}</Text>
           </Pressable>
           <Pressable onPress={markWordLearned} style={({ pressed }) => [styles.smallButton, { backgroundColor: colors.surface, borderColor: colors.border }, pressed && styles.pressed]}>
             <IconSymbol name="checkmark.circle.fill" size={20} color={colors.success} />
@@ -206,7 +215,7 @@ const styles = StyleSheet.create({
   webModeText: { fontSize: 11, fontWeight: "800" },
   modeToggle: { minHeight: 54, borderRadius: 16, borderWidth: 1, padding: 4, flexDirection: "row", gap: 4 },
   modeToggleButton: { flex: 1, minHeight: 44, borderRadius: 12, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6 },
-  modeToggleText: { fontSize: 12, fontWeight: "900" },
+  modeToggleText: { fontSize: 11, fontWeight: "900" },
   progressCard: { minHeight: 205, borderRadius: 26, padding: 22, overflow: "hidden" },
   cardOrb: { position: "absolute", width: 180, height: 180, borderRadius: 90, right: -45, top: -75, backgroundColor: "#FFFFFF12" },
   progressTopline: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
@@ -237,8 +246,8 @@ const styles = StyleSheet.create({
   stageDescription: { fontSize: 10, marginTop: 3 },
   stageCount: { fontSize: 10, fontWeight: "800", marginTop: 3 },
   levelButton: { minHeight: 50, borderRadius: 16, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 },
-  modeGrid: { flexDirection: "row", gap: 8 },
-  modeCard: { flex: 1, minHeight: 107, borderRadius: 17, borderWidth: 1, padding: 12 },
+  modeGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  modeCard: { width: "48.5%", minHeight: 107, borderRadius: 17, borderWidth: 1.5, padding: 12 },
   examCard: { borderWidth: 1.2 },
   modeTitle: { fontSize: 13, fontWeight: "900", marginTop: 10 },
   modeHint: { fontSize: 10, lineHeight: 15, marginTop: 4 },

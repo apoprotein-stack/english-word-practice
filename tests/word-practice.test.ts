@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { DAILY_GOAL, DAILY_NEW_WORDS, DAILY_REVIEW_WORDS, QUESTIONS, STAGES, getDailyWordPlan, getQuestionsForStage, scoreAnswers } from "../lib/word-practice";
+import { AUTO_PLAY_SEQUENCE, DAILY_GOAL, DAILY_NEW_WORDS, DAILY_REVIEW_WORDS, QUESTIONS, STAGES, getDailyWordPlan, getQuestionsForStage, scoreAnswers } from "../lib/word-practice";
 import { DEFAULT_LEARNING_RECORD, LEARNING_STORAGE_KEY, loadLearningRecord, saveLearningRecord } from "../lib/learning-storage";
 
 const storage = new Map<string, string>();
@@ -18,6 +18,11 @@ describe("Wordly learning stages", () => {
     expect(DAILY_GOAL).toBe(20);
     expect(DAILY_NEW_WORDS).toBe(10);
     expect(DAILY_REVIEW_WORDS).toBe(10);
+  });
+
+  it("uses an automatic sequence without waiting for spoken responses", () => {
+    expect(AUTO_PLAY_SEQUENCE).toEqual(["preview", "spell", "example"]);
+    expect(AUTO_PLAY_SEQUENCE).not.toContain("speak");
   });
 
   it("defines the four requested learning stages", () => {

@@ -17,8 +17,9 @@ const PHASES: Phase[] = ["preview", "spell", "speak", "example"];
 
 export default function PracticeScreen() {
   const colors = useColors();
-  const params = useLocalSearchParams<{ stage?: string }>();
+  const params = useLocalSearchParams<{ stage?: string; mode?: string }>();
   const stageId = (typeof params.stage === "string" ? params.stage : "beginner") as StageId;
+  const autoMode = params.mode === "auto";
   const stage = STAGES.find((item) => item.id === stageId) ?? STAGES[0];
   const [learnedWords, setLearnedWords] = useState<string[]>([]);
   const dailyPlan = useMemo(() => getDailyWordPlan(stage.id, new Date(), learnedWords), [stage.id, learnedWords]);
@@ -38,10 +39,11 @@ export default function PracticeScreen() {
   }, []);
 
   useEffect(() => {
+    if (autoMode) return;
     requestRecordingPermissionsAsync().then((permission) => {
       if (permission.granted) setAudioModeAsync({ playsInSilentMode: true, allowsRecording: true });
     });
-  }, []);
+  }, [autoMode]);
 
   const tap = (style: Haptics.ImpactFeedbackStyle = Haptics.ImpactFeedbackStyle.Light) => {
     if (Platform.OS !== "web") Haptics.impactAsync(style);
@@ -52,26 +54,40 @@ export default function PracticeScreen() {
     Speech.speak(text, { language: "en-US", rate, volume: 1 });
   };
 
+  const advanceToNextWord = async () => {
+    if (!question) return;
+    await recordMastery(question.word, "context", true);
+    if (current === words.length - 1) void recordLearningSession(stage.name, words.length, undefined, words.map((item) => item.word));
+    setCurrent((value) => value + 1);
+    setPhase("preview");
+  };
+
   useEffect(() => {
     if (!question) return;
     let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
     Speech.stop();
 
     if (phase === "preview") {
-      // 每個新單字先自動播放完整發音，完成後自動進入拼讀示範。
+      // 自動播放模式會依序朗讀英文、中文，再進入拼讀，不等待使用者回應。
       Speech.speak(question.word, {
         language: "en-US",
         rate: 0.98,
         volume: 1,
         onDone: () => {
-          if (!cancelled) setPhase("spell");
+          if (cancelled) return;
+          if (!autoMode) {
+            setPhase("spell");
+            return;
+          }
+          Speech.speak(question.translation, { language: "zh-TW", rate: 1, volume: 1, onDone: () => { if (!cancelled) setPhase("spell"); } });
         },
       });
     } else if (phase === "spell") {
-      // 自動逐字母拼讀，完成後再播放一次完整單字，接著交給使用者口說。
+      // 自動逐字母拼讀，完成後再播放完整單字；自動播放模式直接進入例句。
       Speech.speak(question.word.split("").join(", "), {
         language: "en-US",
-        rate: 0.88,
+        rate: autoMode ? 0.98 : 0.88,
         volume: 1,
         onDone: () => {
           if (cancelled) return;
@@ -80,9 +96,19 @@ export default function PracticeScreen() {
             rate: 0.98,
             volume: 1,
             onDone: () => {
-              if (!cancelled) setPhase("speak");
+              if (!cancelled) setPhase(autoMode ? "example" : "speak");
             },
           });
+        },
+      });
+    } else if (autoMode && phase === "example") {
+      Speech.speak(question.example, {
+        language: "en-US",
+        rate: 0.9,
+        volume: 1,
+        onDone: () => {
+          if (cancelled) return;
+          timer = setTimeout(() => { void advanceToNextWord(); }, 850);
         },
       });
     } else if (phase === "example") {
@@ -92,20 +118,16 @@ export default function PracticeScreen() {
     return () => {
       cancelled = true;
       Speech.stop();
+      if (timer) clearTimeout(timer);
     };
-  }, [current, phase]);
+  }, [current, phase, autoMode]);
 
   useEffect(() => () => { Speech.stop(); }, []);
 
   const nextPhase = async () => {
     tap();
     if (phaseIndex < PHASES.length - 1) setPhase(PHASES[phaseIndex + 1]);
-    else {
-      await recordMastery(question.word, "context", true);
-      if (current === words.length - 1) void recordLearningSession(stage.name, words.length, undefined, words.map((item) => item.word));
-      setCurrent((value) => value + 1);
-      setPhase("preview");
-    }
+    else await advanceToNextWord();
   };
 
   const toggleRecording = async () => {
@@ -142,8 +164,8 @@ export default function PracticeScreen() {
     );
   }
 
-  const phaseTitle = phase === "preview" ? "導讀一次" : phase === "spell" ? "拼讀一次" : phase === "speak" ? "換你說說看" : "應用例句";
-  const buttonLabel = phase === "preview" ? "跳過導讀，開始拼讀" : phase === "spell" ? "跳過示範，開始口語拼讀" : phase === "speak" ? (recorderState.isRecording ? "完成口語拼讀" : "按下開始說拼法") : current === words.length - 1 ? "完成本次學習" : "下一個單字";
+  const phaseTitle = autoMode ? (phase === "preview" ? "自動導讀" : phase === "spell" ? "自動拼讀" : "自動例句") : phase === "preview" ? "導讀一次" : phase === "spell" ? "拼讀一次" : phase === "speak" ? "換你說說看" : "應用例句";
+  const buttonLabel = autoMode ? "自動播放中 · 點擊跳過" : phase === "preview" ? "跳過導讀，開始拼讀" : phase === "spell" ? "跳過示範，開始口語拼讀" : phase === "speak" ? (recorderState.isRecording ? "完成口語拼讀" : "按下開始說拼法") : current === words.length - 1 ? "完成本次學習" : "下一個單字";
 
   return (
     <ScreenContainer className="px-5" containerClassName="bg-background" edges={["top", "bottom", "left", "right"]}>
@@ -155,10 +177,11 @@ export default function PracticeScreen() {
         </View>
         <View style={[styles.progressTrack, { backgroundColor: colors.border }]}><View style={[styles.progressTrackFill, { backgroundColor: stage.color, width: `${((current + phaseIndex / PHASES.length) / words.length) * 100}%` }]} /></View>
         <View style={styles.phaseRow}>{PHASES.map((item, index) => <View key={item} style={styles.phaseItem}><View style={[styles.phaseDot, { backgroundColor: index <= phaseIndex ? stage.color : colors.border }]} /><Text style={[styles.phaseText, { color: index === phaseIndex ? colors.foreground : colors.muted }]}>{index + 1}. {item === "preview" ? "導讀" : item === "spell" ? "拼讀" : item === "speak" ? "口語" : "例句"}</Text></View>)}</View>
+        {autoMode && <View style={[styles.autoBadge, { backgroundColor: `${colors.primary}18`, borderColor: `${colors.primary}45` }]}><IconSymbol name="play.circle.fill" size={15} color={colors.primary} /><Text style={[styles.autoBadgeText, { color: colors.primary }]}>自動播放中 · 不等待回應</Text></View>}
 
         <View style={styles.learningArea}>
           <Text style={[styles.phaseEyebrow, { color: colors.muted }]}>{isReviewWord ? `複習單字 ${current - dailyPlan.newWords.length + 1}/${DAILY_REVIEW_WORDS}` : `新單字 ${current + 1}/${DAILY_NEW_WORDS}`} · {phaseTitle.toUpperCase()}</Text>
-          <View style={[styles.wordCard, { backgroundColor: colors.foreground }]}>
+          <View style={[styles.wordCard, { backgroundColor: colors.foreground, borderColor: stage.color }]}>
             <View style={styles.cardOrb} />
             <Text style={styles.word}>{question.word}</Text>
             <Text style={styles.pronunciation}>{question.pronunciation}</Text>
@@ -193,9 +216,11 @@ const styles = StyleSheet.create({
   phaseItem: { alignItems: "center", gap: 5 },
   phaseDot: { width: 8, height: 8, borderRadius: 4 },
   phaseText: { fontSize: 10, fontWeight: "700" },
+  autoBadge: { alignSelf: "center", flexDirection: "row", alignItems: "center", gap: 6, borderRadius: 14, borderWidth: 1, paddingHorizontal: 11, paddingVertical: 6, marginTop: 10 },
+  autoBadgeText: { fontSize: 11, fontWeight: "900" },
   learningArea: { flex: 1, justifyContent: "center", gap: 14 },
   phaseEyebrow: { fontSize: 11, fontWeight: "900", letterSpacing: 1.3 },
-  wordCard: { minHeight: 162, borderRadius: 24, padding: 23, justifyContent: "center", overflow: "hidden" },
+  wordCard: { minHeight: 162, borderRadius: 24, borderWidth: 2, padding: 23, justifyContent: "center", overflow: "hidden" },
   cardOrb: { position: "absolute", width: 170, height: 170, borderRadius: 85, right: -50, top: -70, backgroundColor: "#FFFFFF10" },
   word: { color: "#FFFFFF", fontSize: 39, lineHeight: 46, fontWeight: "900", letterSpacing: -1.1 },
   pronunciation: { color: "#FFFFFFB8", fontSize: 15, marginTop: 4 },

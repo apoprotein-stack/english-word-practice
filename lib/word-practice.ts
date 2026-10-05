@@ -2,6 +2,7 @@ export type StageId = "beginner" | "intermediate" | "advanced" | "expert";
 export const DAILY_NEW_WORDS = 10;
 export const DAILY_REVIEW_WORDS = 10;
 export const DAILY_GOAL = DAILY_NEW_WORDS + DAILY_REVIEW_WORDS;
+export const AUTO_PLAY_SEQUENCE = ["preview", "spell", "example"] as const;
 
 export type Stage = { id: StageId; name: string; english: string; description: string; wordCount: number; color: string };
 
