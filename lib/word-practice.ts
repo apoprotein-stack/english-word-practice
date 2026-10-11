@@ -4,6 +4,13 @@ export const DAILY_REVIEW_WORDS = 10;
 export const DAILY_GOAL = DAILY_NEW_WORDS + DAILY_REVIEW_WORDS;
 export const AUTO_PLAY_SEQUENCE = ["preview", "spell", "example"] as const;
 
+export function getSpeechFallbackDuration(text: string, language = "en-US", rate = 1): number {
+  const isChinese = language.toLowerCase().startsWith("zh");
+  const millisecondsPerCharacter = isChinese ? 480 : 95;
+  const minimum = isChinese ? 1800 : 1500;
+  return Math.max(minimum, Math.min(12000, Math.round((text.length * millisecondsPerCharacter) / Math.max(rate, 0.5))));
+}
+
 export type Stage = { id: StageId; name: string; english: string; description: string; wordCount: number; color: string };
 
 export const STAGES: Stage[] = [

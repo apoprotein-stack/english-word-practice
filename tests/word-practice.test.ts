@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { AUTO_PLAY_SEQUENCE, DAILY_GOAL, DAILY_NEW_WORDS, DAILY_REVIEW_WORDS, QUESTIONS, STAGES, getDailyWordPlan, getQuestionsForStage, scoreAnswers } from "../lib/word-practice";
+import { AUTO_PLAY_SEQUENCE, DAILY_GOAL, DAILY_NEW_WORDS, DAILY_REVIEW_WORDS, QUESTIONS, STAGES, getDailyWordPlan, getQuestionsForStage, getSpeechFallbackDuration, scoreAnswers } from "../lib/word-practice";
 import { DEFAULT_LEARNING_RECORD, LEARNING_STORAGE_KEY, loadLearningRecord, saveLearningRecord } from "../lib/learning-storage";
 
 const storage = new Map<string, string>();
@@ -23,6 +23,11 @@ describe("Wordly learning stages", () => {
   it("uses an automatic sequence without waiting for spoken responses", () => {
     expect(AUTO_PLAY_SEQUENCE).toEqual(["preview", "spell", "example"]);
     expect(AUTO_PLAY_SEQUENCE).not.toContain("speak");
+  });
+
+  it("allows Chinese translations with four or five characters to finish speaking", () => {
+    expect(getSpeechFallbackDuration("好奇的", "zh-TW", 1)).toBeGreaterThanOrEqual(1800);
+    expect(getSpeechFallbackDuration("令人屏息的", "zh-TW", 1)).toBeGreaterThan(getSpeechFallbackDuration("好奇的", "zh-TW", 1));
   });
 
   it("defines the four requested learning stages", () => {

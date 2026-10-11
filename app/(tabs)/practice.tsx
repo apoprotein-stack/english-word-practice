@@ -10,7 +10,7 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
 import { loadLearningRecord, recordLearningSession } from "@/lib/learning-storage";
 import { recordMastery } from "@/lib/mastery-storage";
-import { DAILY_NEW_WORDS, DAILY_REVIEW_WORDS, getDailyWordPlan, STAGES, type StageId } from "@/lib/word-practice";
+import { DAILY_NEW_WORDS, DAILY_REVIEW_WORDS, getDailyWordPlan, getSpeechFallbackDuration, STAGES, type StageId } from "@/lib/word-practice";
 
 type Phase = "preview" | "spell" | "speak" | "example";
 const PHASES: Phase[] = ["preview", "spell", "speak", "example"];
@@ -78,7 +78,7 @@ export default function PracticeScreen() {
       };
       Speech.speak(text, { ...options, onDone: finish, onError: finish });
       if (autoMode) {
-        const estimatedMs = Math.max(1500, Math.min(9000, Math.round((text.length * 95) / (options.rate ?? 1))));
+        const estimatedMs = getSpeechFallbackDuration(text, options.language, options.rate);
         timer = setTimeout(finish, estimatedMs);
       }
     };
