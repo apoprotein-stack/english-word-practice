@@ -192,7 +192,7 @@ export default function PracticeScreen() {
 
         <View style={styles.learningArea}>
           <Text style={[styles.phaseEyebrow, { color: colors.muted }]}>{isReviewWord ? `複習單字 ${current - dailyPlan.newWords.length + 1}/${DAILY_REVIEW_WORDS}` : `新單字 ${current + 1}/${DAILY_NEW_WORDS}`} · {phaseTitle.toUpperCase()}</Text>
-          <View style={[styles.wordCard, { backgroundColor: colors.foreground, borderColor: stage.color }]}>
+          <View style={[styles.wordCard, { backgroundColor: "#203247", borderColor: stage.color }]}>
             <View style={styles.cardOrb} />
             <Text style={styles.word}>{question.word}</Text>
             <Text style={styles.pronunciation}>{question.pronunciation}</Text>
@@ -232,12 +232,12 @@ const styles = StyleSheet.create({
   learningArea: { flex: 1, justifyContent: "center", gap: 14 },
   phaseEyebrow: { fontSize: 11, fontWeight: "900", letterSpacing: 1.3 },
   wordCard: { minHeight: 162, borderRadius: 24, borderWidth: 2, padding: 23, justifyContent: "center", overflow: "hidden" },
-  cardOrb: { position: "absolute", width: 170, height: 170, borderRadius: 85, right: -50, top: -70, backgroundColor: "#FFFFFF10" },
+  cardOrb: { position: "absolute", width: 170, height: 170, borderRadius: 85, right: -50, top: -70, backgroundColor: "#6E9ABF22" },
   word: { color: "#FFFFFF", fontSize: 39, lineHeight: 46, fontWeight: "900", letterSpacing: -1.1 },
-  pronunciation: { color: "#FFFFFFB8", fontSize: 15, marginTop: 4 },
+  pronunciation: { color: "#D9E7F2", fontSize: 15, marginTop: 4 },
   cardTranslation: { color: "#FFFFFF", fontSize: 16, fontWeight: "800", marginTop: 8 },
-  partOfSpeech: { color: "#FFFFFF80", fontSize: 9, letterSpacing: 1, fontWeight: "800", marginTop: 17 },
-  audioButton: { flexDirection: "row", alignItems: "center", alignSelf: "flex-start", gap: 7, borderRadius: 14, backgroundColor: "#FFFFFF18", paddingHorizontal: 11, paddingVertical: 8, marginTop: 16 },
+  partOfSpeech: { color: "#BBD0DF", fontSize: 9, letterSpacing: 1, fontWeight: "800", marginTop: 17 },
+  audioButton: { flexDirection: "row", alignItems: "center", alignSelf: "flex-start", gap: 7, borderRadius: 14, backgroundColor: "#FFFFFF20", paddingHorizontal: 11, paddingVertical: 8, marginTop: 16 },
   audioText: { color: "#FFFFFF", fontSize: 12, fontWeight: "800" },
   infoCard: { borderRadius: 18, borderWidth: 1, padding: 18 },
   definition: { fontSize: 17, fontWeight: "800", lineHeight: 24 },

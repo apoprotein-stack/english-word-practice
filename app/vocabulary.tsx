@@ -59,7 +59,7 @@ export default function VocabularyScreen() {
 
         <View style={styles.content}>
           <Text style={[styles.instruction, { color: colors.muted }]}>點選卡片即可自動播放英文發音</Text>
-          <Pressable onPress={() => { tap(); Speech.stop(); Speech.speak(question.word, { language: "en-US", rate: 0.92 }); }} style={({ pressed }) => [styles.card, { backgroundColor: colors.foreground }, pressed && styles.cardPressed]}>
+          <Pressable onPress={() => { tap(); Speech.stop(); Speech.speak(question.word, { language: "en-US", rate: 0.92 }); }} style={({ pressed }) => [styles.card, { backgroundColor: "#203247" }, pressed && styles.cardPressed]}>
             <View style={styles.orb} />
             <Text style={styles.word}>{question.word}</Text>
             <Text style={styles.pronunciation}>{question.pronunciation}</Text>
@@ -97,9 +97,9 @@ const styles = StyleSheet.create({
   content: { flex: 1, justifyContent: "center", gap: 14 },
   instruction: { textAlign: "center", fontSize: 12, fontWeight: "700" },
   card: { minHeight: 214, borderRadius: 27, alignItems: "center", justifyContent: "center", overflow: "hidden", padding: 22 },
-  orb: { position: "absolute", width: 210, height: 210, borderRadius: 105, right: -56, top: -82, backgroundColor: "#FFFFFF12" },
+  orb: { position: "absolute", width: 210, height: 210, borderRadius: 105, right: -56, top: -82, backgroundColor: "#6E9ABF22" },
   word: { color: "#FFFFFF", fontSize: 47, lineHeight: 55, fontWeight: "900", letterSpacing: -1.4 },
-  pronunciation: { color: "#FFFFFFB8", fontSize: 16, marginTop: 5 },
+  pronunciation: { color: "#D9E7F2", fontSize: 16, marginTop: 5 },
   cardTranslation: { color: "#FFFFFF", fontSize: 18, fontWeight: "800", marginTop: 8 },
   audio: { flexDirection: "row", alignItems: "center", gap: 7, backgroundColor: "#FFFFFF1A", borderRadius: 15, paddingHorizontal: 13, paddingVertical: 9, marginTop: 20 },
   audioText: { color: "#FFFFFF", fontSize: 12, fontWeight: "800" },
