@@ -7,23 +7,26 @@ import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
 import { incrementTodayWord, loadLearningRecord } from "@/lib/learning-storage";
-import { DAILY_GOAL, DAILY_NEW_WORDS, DAILY_REVIEW_WORDS, STAGES, type StageId } from "@/lib/word-practice";
+import { getDailyPlanConfig, STAGES, type StageId } from "@/lib/word-practice";
 
-type LearningMode = "practice" | "auto" | "exam";
+type LearningMode = "auto" | "exam";
 
 export default function HomeScreen() {
   const colors = useColors();
   const [completed, setCompleted] = useState(0);
   const [streak, setStreak] = useState(0);
+  const [learnedCount, setLearnedCount] = useState(0);
   const [selectedStage, setSelectedStage] = useState<StageId>("beginner");
-  const [selectedMode, setSelectedMode] = useState<LearningMode>("practice");
-  const progress = Math.min(completed / DAILY_GOAL, 1);
+  const [selectedMode, setSelectedMode] = useState<LearningMode>("auto");
+  const dailyPlan = getDailyPlanConfig(learnedCount);
+  const progress = Math.min(completed / dailyPlan.goal, 1);
   const today = new Date().toLocaleDateString("zh-TW", { weekday: "long", month: "long", day: "numeric" });
 
   useEffect(() => {
     loadLearningRecord().then((record) => {
       setCompleted(record.todayWords);
       setStreak(record.streak);
+      setLearnedCount(record.learnedWords.length);
     });
   }, []);
 
@@ -36,12 +39,13 @@ export default function HomeScreen() {
     const record = await incrementTodayWord();
     setCompleted(record.todayWords);
     setStreak(record.streak);
+    setLearnedCount(record.learnedWords.length);
   };
 
   const startSelectedStage = () => {
     tap();
     if (selectedMode === "exam") router.push({ pathname: "/exam", params: { stage: selectedStage } } as never);
-    else router.push({ pathname: "/(tabs)/practice", params: { stage: selectedStage, mode: selectedMode } } as never);
+    else router.push({ pathname: "/(tabs)/practice", params: { stage: selectedStage, mode: "auto" } } as never);
   };
 
   return (
@@ -69,10 +73,6 @@ export default function HomeScreen() {
         <View style={[styles.webModeBanner, { backgroundColor: `${colors.primary}12`, borderColor: `${colors.primary}35` }]}><View style={[styles.webModeDot, { backgroundColor: colors.primary }]} /><Text style={[styles.webModeText, { color: colors.primary }]}>Wordly 網站練習版 · 可直接用瀏覽器學習</Text></View>
 
         <View style={[styles.modeToggle, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <Pressable onPress={() => { tap(); setSelectedMode("practice"); }} style={({ pressed }) => [styles.modeToggleButton, selectedMode === "practice" && { backgroundColor: colors.success }, pressed && styles.pressed]}>
-            <IconSymbol name="bolt.fill" size={15} color={selectedMode === "practice" ? "#FFFFFF" : colors.muted} />
-            <Text style={[styles.modeToggleText, { color: selectedMode === "practice" ? "#FFFFFF" : colors.muted }]}>練習模式</Text>
-          </Pressable>
           <Pressable onPress={() => { tap(); setSelectedMode("auto"); }} style={({ pressed }) => [styles.modeToggleButton, selectedMode === "auto" && { backgroundColor: colors.primary }, pressed && styles.pressed]}>
             <IconSymbol name="play.circle.fill" size={15} color={selectedMode === "auto" ? "#FFFFFF" : colors.muted} />
             <Text style={[styles.modeToggleText, { color: selectedMode === "auto" ? "#FFFFFF" : colors.muted }]}>自動播放</Text>
@@ -97,17 +97,17 @@ export default function HomeScreen() {
           </View>
           <View style={styles.progressNumbers}>
             <Text style={styles.progressValue}>{completed}</Text>
-            <Text style={styles.progressTotal}>/ {DAILY_GOAL} words</Text>
+            <Text style={styles.progressTotal}>/ {dailyPlan.goal} words</Text>
           </View>
           <View style={styles.track}>
             <View style={[styles.trackFill, { width: `${progress * 100}%` }]} />
           </View>
-          <Text style={styles.progressHint}>{DAILY_GOAL - completed === 0 ? "Goal complete — lovely work." : `${DAILY_GOAL - completed} words left to reach today's goal.`}</Text>
+          <Text style={styles.progressHint}>{dailyPlan.goal - completed === 0 ? "Goal complete — lovely work." : `${Math.max(0, dailyPlan.goal - completed)} words left to reach today's goal.`}</Text>
         </View>
 
         <View style={[styles.planCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <View style={[styles.planIcon, { backgroundColor: `${colors.primary}18` }]}><IconSymbol name="calendar" size={19} color={colors.primary} /></View>
-          <View style={styles.planCopy}><Text style={[styles.planTitle, { color: colors.foreground }]}>今日學習計畫 · {DAILY_GOAL} 字</Text><Text style={[styles.planSubtitle, { color: colors.muted }]}>{DAILY_NEW_WORDS} 個新單字 + {DAILY_REVIEW_WORDS} 個複習單字 · 依日期自動安排</Text></View>
+          <View style={styles.planCopy}><Text style={[styles.planTitle, { color: colors.foreground }]}>今日學習計畫 · {dailyPlan.goal} 字</Text><Text style={[styles.planSubtitle, { color: colors.muted }]}>{dailyPlan.newWords} 個新單字 + {dailyPlan.reviewWords} 個複習單字 · {dailyPlan.milestoneReached ? "已達累積 100 字里程碑" : "累積 100 字後升級"}</Text></View>
         </View>
 
         <View style={styles.sectionHeading}>
@@ -142,11 +142,6 @@ export default function HomeScreen() {
             <IconSymbol name="play.circle.fill" size={22} color={colors.primary} />
             <Text style={[styles.modeTitle, { color: colors.foreground }]}>自動播放模式</Text>
             <Text style={[styles.modeHint, { color: colors.muted }]}>自動朗讀，不等待回應</Text>
-          </Pressable>
-          <Pressable onPress={() => { tap(); setSelectedMode("practice"); }} style={({ pressed }) => [styles.modeCard, { backgroundColor: selectedMode === "practice" ? `${colors.success}12` : colors.surface, borderColor: selectedMode === "practice" ? colors.success : colors.border }, pressed && styles.pressed]}>
-            <IconSymbol name="speaker.wave.2.fill" size={22} color={colors.success} />
-            <Text style={[styles.modeTitle, { color: colors.foreground }]}>練習模式</Text>
-            <Text style={[styles.modeHint, { color: colors.muted }]}>導讀、拼讀與例句</Text>
           </Pressable>
           <Pressable onPress={() => { tap(); setSelectedMode("exam"); }} style={({ pressed }) => [styles.modeCard, styles.examCard, { backgroundColor: selectedMode === "exam" ? `${colors.error}18` : colors.surface, borderColor: selectedMode === "exam" ? colors.error : `${colors.error}55` }, pressed && styles.pressed]}>
             <IconSymbol name="chart.bar.fill" size={22} color={colors.error} />

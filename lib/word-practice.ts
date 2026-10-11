@@ -2,7 +2,21 @@ export type StageId = "beginner" | "intermediate" | "advanced" | "expert";
 export const DAILY_NEW_WORDS = 10;
 export const DAILY_REVIEW_WORDS = 10;
 export const DAILY_GOAL = DAILY_NEW_WORDS + DAILY_REVIEW_WORDS;
+export const ADVANCED_DAILY_NEW_WORDS = 20;
+export const ADVANCED_DAILY_REVIEW_WORDS = 15;
+export const ADVANCED_DAILY_GOAL = ADVANCED_DAILY_NEW_WORDS + ADVANCED_DAILY_REVIEW_WORDS;
+export const VOCABULARY_MILESTONE = 100;
+export const MAX_DAILY_GOAL = ADVANCED_DAILY_GOAL;
 export const AUTO_PLAY_SEQUENCE = ["preview", "spell", "example"] as const;
+
+export type DailyPlanConfig = { newWords: number; reviewWords: number; goal: number; milestoneReached: boolean };
+
+export function getDailyPlanConfig(learnedCount: number): DailyPlanConfig {
+  const milestoneReached = learnedCount >= VOCABULARY_MILESTONE;
+  return milestoneReached
+    ? { newWords: ADVANCED_DAILY_NEW_WORDS, reviewWords: ADVANCED_DAILY_REVIEW_WORDS, goal: ADVANCED_DAILY_GOAL, milestoneReached }
+    : { newWords: DAILY_NEW_WORDS, reviewWords: DAILY_REVIEW_WORDS, goal: DAILY_GOAL, milestoneReached };
+}
 
 export function getSpeechFallbackDuration(text: string, language = "en-US", rate = 1): number {
   const isChinese = language.toLowerCase().startsWith("zh");
@@ -83,6 +97,7 @@ export function getQuestionsForStage(stage: StageId): Question[] {
 export function getDailyWordPlan(stage: StageId, date = new Date(), learnedWords: string[] = []): { newWords: Question[]; reviewWords: Question[] } {
   const pool = getQuestionsForStage(stage);
   if (pool.length === 0) return { newWords: [], reviewWords: [] };
+  const config = getDailyPlanConfig(learnedWords.length);
   const dateSeed = Number(`${date.getFullYear()}${date.getMonth() + 1}${date.getDate()}`);
   const offset = dateSeed % pool.length;
   const ordered = pool.slice(offset).concat(pool.slice(0, offset));
@@ -90,8 +105,8 @@ export function getDailyWordPlan(stage: StageId, date = new Date(), learnedWords
   const newPool = ordered.filter((question) => !learned.has(question.word));
   const reviewPool = ordered.filter((question) => learned.has(question.word));
   return {
-    newWords: newPool.slice(0, DAILY_NEW_WORDS),
-    reviewWords: reviewPool.slice(0, DAILY_REVIEW_WORDS),
+    newWords: newPool.slice(0, config.newWords),
+    reviewWords: reviewPool.slice(0, config.reviewWords),
   };
 }
 

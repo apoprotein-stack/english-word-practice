@@ -40,7 +40,6 @@ export default function HomeScreen() {
   const displayDate = new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" }).toUpperCase();
   const { streak, completedToday, todayRecord, markComplete } = usePracticeProgress();
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isListening, setIsListening] = useState(false);
   const [reason, setReason] = useState("");
   const [result, setResult] = useState("");
   const [submitted, setSubmitted] = useState(false);
@@ -81,35 +80,9 @@ export default function HomeScreen() {
     setTimeout(() => setIsPlaying(false), 43000);
   };
 
-  const handleMic = () => {
-    if (Platform.OS !== "web") {
-      Alert.alert("Voice practice", "Voice transcription is ready for the web preview. Native speech recognition can be connected next with the device Speech framework.");
-      return;
-    }
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      Alert.alert("Microphone unavailable", "Try Chrome or Edge to use browser speech recognition.");
-      return;
-    }
-    if (isListening) {
-      setIsListening(false);
-      return;
-    }
-    const recognition = new SpeechRecognition();
-    recognition.lang = "en-US";
-    recognition.interimResults = false;
-    recognition.onstart = () => setIsListening(true);
-    recognition.onend = () => setIsListening(false);
-    recognition.onerror = () => setIsListening(false);
-    recognition.onresult = (event: any) => {
-      setResult((current) => `${current}${current ? " " : ""}${event.results[0][0].transcript}`);
-    };
-    recognition.start();
-  };
-
   const submitAnswers = async () => {
     if (!reason.trim() && !result.trim()) {
-      Alert.alert("Add your answer", "Type or record a quick answer before checking your understanding.");
+      Alert.alert("Add your answer", "Type a quick answer before checking your understanding.");
       return;
     }
     await markComplete(lesson.id, answerScore, { reason, result });
@@ -193,20 +166,12 @@ export default function HomeScreen() {
               multiline
               style={[styles.input, { color: colors.foreground, borderColor: colors.border }]}
             />
-            <View style={styles.answerActions}>
-              <Pressable onPress={handleMic} style={({ pressed }) => [styles.micButton, { borderColor: isListening ? colors.error : colors.border }, pressed && styles.pressed]}>
-                <IconSymbol name="mic.fill" size={18} color={isListening ? colors.error : colors.primary} />
-                <Text style={[styles.micText, { color: isListening ? colors.error : colors.primary }]}>{isListening ? "Listening…" : "Answer by voice"}</Text>
-              </Pressable>
-              <Text style={[styles.voiceNote, { color: colors.muted }]}>EN-US</Text>
-            </View>
-
             <Text style={[styles.questionNumber, { color: colors.primary, marginTop: 22 }]}>02</Text>
             <Text style={[styles.question, { color: colors.foreground }]}>{lesson.questions[1]}</Text>
             <TextInput
               value={result}
               onChangeText={setResult}
-              placeholder="Type or use the mic above…"
+              placeholder="Type your answer…"
               placeholderTextColor={colors.muted}
               multiline
               style={[styles.input, { color: colors.foreground, borderColor: colors.border }]}
@@ -272,10 +237,6 @@ const styles = StyleSheet.create({
   questionNumber: { fontSize: 12, fontWeight: "900", letterSpacing: 1 },
   question: { fontSize: 16, lineHeight: 23, fontWeight: "700", marginTop: 6, marginBottom: 13 },
   input: { minHeight: 64, borderWidth: 1, borderRadius: 13, paddingHorizontal: 13, paddingVertical: 12, fontSize: 14, textAlignVertical: "top" },
-  answerActions: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 10 },
-  micButton: { flexDirection: "row", alignItems: "center", gap: 7, borderWidth: 1, borderRadius: 12, paddingHorizontal: 11, paddingVertical: 9 },
-  micText: { fontSize: 12, fontWeight: "800" },
-  voiceNote: { fontSize: 10, fontWeight: "800", letterSpacing: 1 },
   checkButton: { minHeight: 54, borderRadius: 17, flexDirection: "row", justifyContent: "center", alignItems: "center", gap: 8 },
   checkButtonText: { fontSize: 15, fontWeight: "800" },
   feedbackCard: { borderWidth: 1, borderRadius: 20, padding: 17 },

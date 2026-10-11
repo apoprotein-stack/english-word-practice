@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { AUTO_PLAY_SEQUENCE, DAILY_GOAL, DAILY_NEW_WORDS, DAILY_REVIEW_WORDS, QUESTIONS, STAGES, getDailyWordPlan, getQuestionsForStage, getSpeechFallbackDuration, scoreAnswers } from "../lib/word-practice";
+import { ADVANCED_DAILY_GOAL, ADVANCED_DAILY_NEW_WORDS, ADVANCED_DAILY_REVIEW_WORDS, AUTO_PLAY_SEQUENCE, DAILY_GOAL, DAILY_NEW_WORDS, DAILY_REVIEW_WORDS, QUESTIONS, STAGES, VOCABULARY_MILESTONE, getDailyPlanConfig, getDailyWordPlan, getQuestionsForStage, getSpeechFallbackDuration, scoreAnswers } from "../lib/word-practice";
 import { DEFAULT_LEARNING_RECORD, LEARNING_STORAGE_KEY, loadLearningRecord, saveLearningRecord } from "../lib/learning-storage";
 
 const storage = new Map<string, string>();
@@ -18,6 +18,14 @@ describe("Wordly learning stages", () => {
     expect(DAILY_GOAL).toBe(20);
     expect(DAILY_NEW_WORDS).toBe(10);
     expect(DAILY_REVIEW_WORDS).toBe(10);
+  });
+
+  it("upgrades the daily plan after one hundred learned words", () => {
+    expect(getDailyPlanConfig(VOCABULARY_MILESTONE - 1)).toMatchObject({ newWords: DAILY_NEW_WORDS, reviewWords: DAILY_REVIEW_WORDS, goal: DAILY_GOAL, milestoneReached: false });
+    expect(getDailyPlanConfig(VOCABULARY_MILESTONE)).toMatchObject({ newWords: ADVANCED_DAILY_NEW_WORDS, reviewWords: ADVANCED_DAILY_REVIEW_WORDS, goal: ADVANCED_DAILY_GOAL, milestoneReached: true });
+    const plan = getDailyWordPlan("beginner", new Date(2026, 8, 29), Array.from({ length: VOCABULARY_MILESTONE }, (_, index) => `learned-${index}`));
+    expect(plan.newWords.length).toBeLessThanOrEqual(ADVANCED_DAILY_NEW_WORDS);
+    expect(plan.reviewWords.length).toBeLessThanOrEqual(ADVANCED_DAILY_REVIEW_WORDS);
   });
 
   it("uses an automatic sequence without waiting for spoken responses", () => {

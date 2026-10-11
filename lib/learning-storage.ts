@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-import { DAILY_GOAL } from "./word-practice";
+import { getDailyPlanConfig, MAX_DAILY_GOAL } from "./word-practice";
 
 export const LEARNING_STORAGE_KEY = "@wordly/learning-record-v1";
 
@@ -39,7 +39,7 @@ function normalizeRecord(value: Partial<LearningRecord>): LearningRecord {
   return {
     ...DEFAULT_LEARNING_RECORD,
     ...value,
-    todayWords: Math.max(0, Math.min(Number(value.todayWords) || 0, DAILY_GOAL)),
+    todayWords: Math.max(0, Math.min(Number(value.todayWords) || 0, MAX_DAILY_GOAL)),
     totalWords: Math.max(0, Number(value.totalWords) || 0),
     streak: Math.max(0, Number(value.streak) || 0),
     weekly: Array.isArray(value.weekly) && value.weekly.length === 7 ? value.weekly.map((item) => Math.max(0, Number(item) || 0)) : [...DEFAULT_LEARNING_RECORD.weekly],
@@ -69,9 +69,10 @@ export async function saveLearningRecord(record: LearningRecord): Promise<void> 
 
 export async function incrementTodayWord(): Promise<LearningRecord> {
   const current = await loadLearningRecord();
+  const dailyGoal = getDailyPlanConfig(current.learnedWords.length).goal;
   const next = {
     ...current,
-    todayWords: Math.min(current.todayWords + 1, DAILY_GOAL),
+    todayWords: Math.min(current.todayWords + 1, dailyGoal),
     totalWords: current.totalWords + 1,
     lastDate: todayKey(),
     streak: current.streak || 1,
@@ -83,9 +84,10 @@ export async function incrementTodayWord(): Promise<LearningRecord> {
 export async function recordLearningSession(stageName: string, words: number, minutes = Math.max(1, words * 2), learnedWords: string[] = []): Promise<LearningRecord> {
   const current = await loadLearningRecord();
   const date = todayKey();
+  const dailyGoal = getDailyPlanConfig(current.learnedWords.length).goal;
   const next = {
     ...current,
-    todayWords: Math.min(current.todayWords + words, DAILY_GOAL),
+    todayWords: Math.min(current.todayWords + words, dailyGoal),
     totalWords: current.totalWords + words,
     streak: current.streak || 1,
     lastDate: date,
