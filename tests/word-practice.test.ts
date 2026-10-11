@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { ADVANCED_DAILY_GOAL, ADVANCED_DAILY_NEW_WORDS, ADVANCED_DAILY_REVIEW_WORDS, AUTO_PLAY_SEQUENCE, DAILY_GOAL, DAILY_NEW_WORDS, DAILY_REVIEW_WORDS, QUESTIONS, STAGES, VOCABULARY_MILESTONE, getDailyPlanConfig, getDailyWordPlan, getQuestionsForStage, getSpeechFallbackDuration, scoreAnswers } from "../lib/word-practice";
+import { ADVANCED_DAILY_GOAL, ADVANCED_DAILY_NEW_WORDS, ADVANCED_DAILY_REVIEW_WORDS, AUTO_PLAY_SEQUENCE, DAILY_GOAL, DAILY_NEW_WORDS, DAILY_REVIEW_WORDS, QUESTIONS, STAGES, VOCABULARY_MILESTONE, getDailyPlanConfig, getDailyWordPlan, getQuestionsForStage, getSpeechFallbackDuration, getVocabularyProgress, scoreAnswers } from "../lib/word-practice";
 import { DEFAULT_LEARNING_RECORD, LEARNING_STORAGE_KEY, loadLearningRecord, saveLearningRecord } from "../lib/learning-storage";
 
 const storage = new Map<string, string>();
@@ -26,6 +26,11 @@ describe("Wordly learning stages", () => {
     const plan = getDailyWordPlan("beginner", new Date(2026, 8, 29), Array.from({ length: VOCABULARY_MILESTONE }, (_, index) => `learned-${index}`));
     expect(plan.newWords.length).toBeLessThanOrEqual(ADVANCED_DAILY_NEW_WORDS);
     expect(plan.reviewWords.length).toBeLessThanOrEqual(ADVANCED_DAILY_REVIEW_WORDS);
+  });
+
+  it("reports learned and remaining vocabulary through the 100-word milestone", () => {
+    expect(getVocabularyProgress(20)).toEqual({ learned: 20, remaining: 80, percent: 20, milestoneReached: false });
+    expect(getVocabularyProgress(125)).toEqual({ learned: 100, remaining: 0, percent: 100, milestoneReached: true });
   });
 
   it("uses an automatic sequence without waiting for spoken responses", () => {

@@ -9,6 +9,18 @@ export const VOCABULARY_MILESTONE = 100;
 export const MAX_DAILY_GOAL = ADVANCED_DAILY_GOAL;
 export const AUTO_PLAY_SEQUENCE = ["preview", "spell", "example"] as const;
 
+export type VocabularyProgress = { learned: number; remaining: number; percent: number; milestoneReached: boolean };
+
+export function getVocabularyProgress(learnedCount: number): VocabularyProgress {
+  const learned = Math.max(0, Math.min(Math.floor(learnedCount), VOCABULARY_MILESTONE));
+  return {
+    learned,
+    remaining: VOCABULARY_MILESTONE - learned,
+    percent: Math.round((learned / VOCABULARY_MILESTONE) * 100),
+    milestoneReached: learned >= VOCABULARY_MILESTONE,
+  };
+}
+
 export type DailyPlanConfig = { newWords: number; reviewWords: number; goal: number; milestoneReached: boolean };
 
 export function getDailyPlanConfig(learnedCount: number): DailyPlanConfig {

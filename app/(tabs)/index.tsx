@@ -7,7 +7,7 @@ import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
 import { incrementTodayWord, loadLearningRecord } from "@/lib/learning-storage";
-import { getDailyPlanConfig, STAGES, type StageId } from "@/lib/word-practice";
+import { getDailyPlanConfig, getVocabularyProgress, STAGES, VOCABULARY_MILESTONE, type StageId } from "@/lib/word-practice";
 
 type LearningMode = "auto" | "exam";
 
@@ -19,6 +19,7 @@ export default function HomeScreen() {
   const [selectedStage, setSelectedStage] = useState<StageId>("beginner");
   const [selectedMode, setSelectedMode] = useState<LearningMode>("auto");
   const dailyPlan = getDailyPlanConfig(learnedCount);
+  const vocabularyProgress = getVocabularyProgress(learnedCount);
   const progress = Math.min(completed / dailyPlan.goal, 1);
   const today = new Date().toLocaleDateString("zh-TW", { weekday: "long", month: "long", day: "numeric" });
 
@@ -83,7 +84,7 @@ export default function HomeScreen() {
           </Pressable>
         </View>
 
-        <View style={[styles.progressCard, { backgroundColor: colors.foreground }]}> 
+        <View style={[styles.progressCard, { backgroundColor: colors.foreground }]}>
           <View style={styles.cardOrb} />
           <View style={styles.progressTopline}>
             <View>
@@ -108,6 +109,12 @@ export default function HomeScreen() {
         <View style={[styles.planCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <View style={[styles.planIcon, { backgroundColor: `${colors.primary}18` }]}><IconSymbol name="calendar" size={19} color={colors.primary} /></View>
           <View style={styles.planCopy}><Text style={[styles.planTitle, { color: colors.foreground }]}>今日學習計畫 · {dailyPlan.goal} 字</Text><Text style={[styles.planSubtitle, { color: colors.muted }]}>{dailyPlan.newWords} 個新單字 + {dailyPlan.reviewWords} 個複習單字 · {dailyPlan.milestoneReached ? "已達累積 100 字里程碑" : "累積 100 字後升級"}</Text></View>
+        </View>
+
+        <View style={[styles.vocabularyProgressCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <View style={styles.vocabularyProgressHeader}><View><Text style={[styles.vocabularyProgressTitle, { color: colors.foreground }]}>單字學習進度</Text><Text style={[styles.vocabularyProgressHint, { color: colors.muted }]}>朝向 {VOCABULARY_MILESTONE} 字里程碑</Text></View><Text style={[styles.vocabularyProgressPercent, { color: colors.primary }]}>{vocabularyProgress.percent}%</Text></View>
+          <View style={[styles.vocabularyTrack, { backgroundColor: colors.border }]}><View style={[styles.vocabularyTrackFill, { width: `${vocabularyProgress.percent}%`, backgroundColor: colors.primary }]} /></View>
+          <View style={styles.vocabularyProgressLabels}><Text style={[styles.vocabularyProgressLearned, { color: colors.foreground }]}>已學 {vocabularyProgress.learned} 字</Text><Text style={[styles.vocabularyProgressRemaining, { color: colors.muted }]}>尚未學 {vocabularyProgress.remaining} 字</Text></View>
         </View>
 
         <View style={styles.sectionHeading}>
@@ -229,6 +236,16 @@ const styles = StyleSheet.create({
   planCopy: { flex: 1, marginLeft: 11 },
   planTitle: { fontSize: 14, fontWeight: "900" },
   planSubtitle: { fontSize: 11, lineHeight: 16, marginTop: 3 },
+  vocabularyProgressCard: { borderRadius: 18, borderWidth: 1, padding: 15 },
+  vocabularyProgressHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
+  vocabularyProgressTitle: { fontSize: 14, fontWeight: "900" },
+  vocabularyProgressHint: { fontSize: 11, marginTop: 3 },
+  vocabularyProgressPercent: { fontSize: 18, fontWeight: "900" },
+  vocabularyTrack: { height: 9, borderRadius: 5, overflow: "hidden", marginTop: 13 },
+  vocabularyTrackFill: { height: "100%", borderRadius: 5 },
+  vocabularyProgressLabels: { flexDirection: "row", justifyContent: "space-between", marginTop: 8 },
+  vocabularyProgressLearned: { fontSize: 11, fontWeight: "800" },
+  vocabularyProgressRemaining: { fontSize: 11, fontWeight: "700" },
   sectionHeading: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: -12 },
   sectionTitle: { fontSize: 18, fontWeight: "800", letterSpacing: -0.2 },
   sectionMeta: { fontSize: 13, fontWeight: "600" },

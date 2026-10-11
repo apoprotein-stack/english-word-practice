@@ -8,7 +8,7 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
 import { DEFAULT_LEARNING_RECORD, loadLearningRecord, type LearningRecord } from "@/lib/learning-storage";
 import { averageMastery, loadMastery, masteryLabel } from "@/lib/mastery-storage";
-import { getDailyPlanConfig, STAGES } from "@/lib/word-practice";
+import { getDailyPlanConfig, getVocabularyProgress, STAGES, VOCABULARY_MILESTONE } from "@/lib/word-practice";
 
 const DAY_LABELS = ["一", "二", "三", "四", "五", "六", "日"];
 
@@ -23,6 +23,7 @@ export default function ProgressScreen() {
   const max = Math.max(...record.weekly, 1);
   const weekTotal = record.weekly.reduce((total, value) => total + value, 0);
   const dailyPlan = getDailyPlanConfig(record.learnedWords.length);
+  const vocabularyProgress = getVocabularyProgress(record.learnedWords.length);
   const tap = () => {
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   };
@@ -45,6 +46,11 @@ export default function ProgressScreen() {
               <View style={[styles.statCard, { backgroundColor: colors.foreground }]}><IconSymbol name="bolt.fill" size={17} color="#F4B942" /><Text style={styles.statNumber}>{record.streak}</Text><Text style={styles.statLabel}>連續天數</Text></View>
               <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}><IconSymbol name="book.fill" size={17} color={colors.primary} /><Text style={[styles.statNumber, { color: colors.foreground }]}>{record.totalWords}</Text><Text style={[styles.statLabel, { color: colors.muted }]}>已學單字</Text></View>
               <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}><IconSymbol name="chart.bar.fill" size={17} color={colors.success} /><Text style={[styles.statNumber, { color: colors.foreground }]}>{masteryScore}%</Text><Text style={[styles.statLabel, { color: colors.muted }]}>{masteryScore === 0 ? "尚未評估" : masteryLabel(masteryScore)}</Text></View>
+            </View>
+            <View style={[styles.vocabularyProgressCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <View style={styles.vocabularyProgressHeader}><View><Text style={[styles.cardTitle, { color: colors.foreground }]}>單字學習進度</Text><Text style={[styles.cardHint, { color: colors.muted }]}>累積目標 {VOCABULARY_MILESTONE} 字</Text></View><Text style={[styles.vocabularyProgressPercent, { color: colors.primary }]}>{vocabularyProgress.percent}%</Text></View>
+              <View style={[styles.vocabularyTrack, { backgroundColor: colors.border }]}><View style={[styles.vocabularyTrackFill, { width: `${vocabularyProgress.percent}%`, backgroundColor: colors.primary }]} /></View>
+              <View style={styles.vocabularyProgressLabels}><Text style={[styles.vocabularyProgressLearned, { color: colors.foreground }]}>已學 {vocabularyProgress.learned} 字</Text><Text style={[styles.vocabularyProgressRemaining, { color: colors.muted }]}>尚未學 {vocabularyProgress.remaining} 字</Text></View>
             </View>
             <View style={[styles.chartCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
               <View style={styles.cardHeader}><View><Text style={[styles.cardTitle, { color: colors.foreground }]}>本週學習量</Text><Text style={[styles.cardHint, { color: colors.muted }]}>每天目標 {dailyPlan.goal} 個單字</Text></View><Text style={[styles.weekTotal, { color: colors.primary }]}>{weekTotal} words</Text></View>
@@ -72,6 +78,14 @@ const styles = StyleSheet.create({
   statCard: { flex: 1, minHeight: 111, borderRadius: 18, borderWidth: 1, padding: 13 },
   statNumber: { color: "#FFFFFF", fontSize: 26, fontWeight: "900", marginTop: 9 },
   statLabel: { color: "#FFFFFF90", fontSize: 11, fontWeight: "700", marginTop: 2 },
+  vocabularyProgressCard: { borderRadius: 21, borderWidth: 1, padding: 17, marginBottom: 14 },
+  vocabularyProgressHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
+  vocabularyProgressPercent: { fontSize: 18, fontWeight: "900" },
+  vocabularyTrack: { height: 9, borderRadius: 5, overflow: "hidden", marginTop: 13 },
+  vocabularyTrackFill: { height: "100%", borderRadius: 5 },
+  vocabularyProgressLabels: { flexDirection: "row", justifyContent: "space-between", marginTop: 8 },
+  vocabularyProgressLearned: { fontSize: 11, fontWeight: "800" },
+  vocabularyProgressRemaining: { fontSize: 11, fontWeight: "700" },
   chartCard: { borderRadius: 21, borderWidth: 1, padding: 17 },
   cardHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
   cardTitle: { fontSize: 17, fontWeight: "800" },
