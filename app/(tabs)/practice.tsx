@@ -83,6 +83,44 @@ export default function PracticeScreen() {
       }
     };
 
+    const speakSpellingWithFallback = (word: string, rate: number, onDone: () => void) => {
+      const letters = Array.from(word);
+      let index = 0;
+
+      const playNextLetter = () => {
+        if (cancelled) return;
+        if (index >= letters.length) {
+          // Give the final utterance a short quiet gap before saying the whole word.
+          timer = setTimeout(onDone, 180);
+          return;
+        }
+
+        const letter = letters[index++];
+        let completed = false;
+        const finishLetter = () => {
+          if (completed || cancelled) return;
+          completed = true;
+          if (timer) clearTimeout(timer);
+          Speech.stop();
+          // A brief gap prevents browser speechSynthesis from merging or dropping
+          // the final letters when individual utterances are queued too quickly.
+          timer = setTimeout(playNextLetter, 120);
+        };
+
+        Speech.speak(letter, {
+          language: "en-US",
+          rate,
+          volume: 1,
+          onDone: finishLetter,
+          onError: finishLetter,
+        });
+        // Keep progressing even when a browser does not emit onDone/onError.
+        timer = setTimeout(finishLetter, Math.max(1400, Math.round(1900 / rate)));
+      };
+
+      playNextLetter();
+    };
+
     if (phase === "preview") {
       // 自動播放模式會依序朗讀英文、中文，再進入拼讀，不等待使用者回應。
       speakWithFallback(question.word, {
@@ -99,11 +137,7 @@ export default function PracticeScreen() {
       });
     } else if (phase === "spell") {
       // 自動逐字母拼讀，完成後再播放完整單字；自動播放模式直接進入例句。
-      speakWithFallback(question.word.split("").join(", "), {
-        language: "en-US",
-        rate: autoMode ? 0.98 : 0.88,
-        volume: 1,
-      }, () => {
+      speakSpellingWithFallback(question.word, autoMode ? 0.98 : 0.88, () => {
           if (cancelled) return;
           speakWithFallback(question.word, {
             language: "en-US",
