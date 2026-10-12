@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ADVANCED_DAILY_GOAL, ADVANCED_DAILY_NEW_WORDS, ADVANCED_DAILY_REVIEW_WORDS, AUTO_PLAY_SEQUENCE, DAILY_GOAL, DAILY_NEW_WORDS, DAILY_REVIEW_WORDS, QUESTIONS, STAGES, VOCABULARY_MILESTONE, getDailyPlanConfig, getDailyWordPlan, getQuestionsForStage, getSpeechFallbackDuration, getVocabularyProgress, scoreAnswers } from "../lib/word-practice";
+import { localDateKey } from "../lib/date-keys";
 import { DEFAULT_LEARNING_RECORD, LEARNING_STORAGE_KEY, loadLearningRecord, saveLearningRecord } from "../lib/learning-storage";
 
 const storage = new Map<string, string>();
@@ -92,7 +93,7 @@ describe("Wordly learning stages", () => {
   });
 
   it("persists a learning record through the storage adapter", async () => {
-    const record = { ...DEFAULT_LEARNING_RECORD, todayWords: 3, totalWords: 3, lastDate: new Date().toISOString().slice(0, 10) };
+    const record = { ...DEFAULT_LEARNING_RECORD, todayWords: 3, totalWords: 3, lastDate: localDateKey() };
     await saveLearningRecord(record);
     expect(storage.has(LEARNING_STORAGE_KEY)).toBe(true);
     await expect(loadLearningRecord()).resolves.toMatchObject({ todayWords: 3, totalWords: 3 });

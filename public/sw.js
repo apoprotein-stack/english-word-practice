@@ -20,7 +20,10 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   const request = event.request;
-  if (request.method !== "GET" || new URL(request.url).origin !== self.location.origin) return;
+  const url = new URL(request.url);
+  if (request.method !== "GET" || url.origin !== self.location.origin) return;
+  // Let Vercel Analytics requests go straight to the network so the script stays current.
+  if (url.pathname.startsWith("/_vercel/")) return;
 
   if (request.mode === "navigate") {
     event.respondWith(
