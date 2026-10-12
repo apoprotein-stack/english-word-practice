@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { ADVANCED_DAILY_GOAL, ADVANCED_DAILY_NEW_WORDS, ADVANCED_DAILY_REVIEW_WORDS, AUTO_PLAY_SEQUENCE, DAILY_GOAL, DAILY_NEW_WORDS, DAILY_REVIEW_WORDS, QUESTIONS, STAGES, VOCABULARY_MILESTONE, getDailyPlanConfig, getDailyWordPlan, getQuestionsForStage, getSpeechFallbackDuration, getVocabularyProgress, scoreAnswers } from "../lib/word-practice";
+import { ADVANCED_DAILY_GOAL, ADVANCED_DAILY_NEW_WORDS, ADVANCED_DAILY_REVIEW_WORDS, AUTO_PLAY_SEQUENCE, CEFR_LEVELS, DAILY_GOAL, DAILY_NEW_WORDS, DAILY_REVIEW_WORDS, QUESTIONS, STAGES, VOCABULARY_MILESTONE, VOCABULARY_TOPICS, getDailyPlanConfig, getDailyWordPlan, getQuestionsForStage, getSpeechFallbackDuration, getVocabularyProgress, scoreAnswers } from "../lib/word-practice";
 import { localDateKey } from "../lib/date-keys";
 import { DEFAULT_LEARNING_RECORD, LEARNING_STORAGE_KEY, loadLearningRecord, saveLearningRecord } from "../lib/learning-storage";
 
@@ -64,6 +64,13 @@ describe("Wordly learning stages", () => {
     expect(getQuestionsForStage("intermediate").length).toBeGreaterThanOrEqual(3000);
     expect(getQuestionsForStage("advanced").length).toBeGreaterThanOrEqual(4000);
     expect(getQuestionsForStage("expert").length).toBeGreaterThanOrEqual(6000);
+  });
+
+  it("provides filter metadata for every vocabulary entry", () => {
+    expect(QUESTIONS.every((question) => CEFR_LEVELS.includes(question.cefr))).toBe(true);
+    expect(QUESTIONS.every((question) => VOCABULARY_TOPICS.includes(question.topic))).toBe(true);
+    expect(new Set(QUESTIONS.map((question) => question.partOfSpeech)).size).toBeGreaterThanOrEqual(4);
+    expect(new Set(QUESTIONS.map((question) => question.topic)).size).toBeGreaterThanOrEqual(5);
   });
 
   it("can supply twenty new words in the 35-word plan", () => {

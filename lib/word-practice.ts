@@ -2,6 +2,14 @@ import { localDayNumber } from "./date-keys";
 import { GENERATED_VOCABULARY } from "./vocabulary-bank.generated";
 
 export type StageId = "beginner" | "intermediate" | "advanced" | "expert";
+export type CEFRLevel = "A1" | "A2" | "B1" | "B2" | "C1" | "C2";
+export type VocabularyTopic = "everyday" | "academic" | "travel" | "work" | "education" | "technology" | "health" | "nature" | "society";
+export const CEFR_LEVELS: CEFRLevel[] = ["A1", "A2", "B1", "B2", "C1", "C2"];
+export const VOCABULARY_TOPICS: VocabularyTopic[] = ["everyday", "academic", "travel", "work", "education", "technology", "health", "nature", "society"];
+export const VOCABULARY_TOPIC_LABELS: Record<VocabularyTopic, string> = {
+  everyday: "日常生活", academic: "學術閱讀", travel: "旅行交通", work: "職場商務", education: "學校教育",
+  technology: "科技數位", health: "健康生活", nature: "自然環境", society: "社會公共",
+};
 export const DAILY_NEW_WORDS = 10;
 export const DAILY_REVIEW_WORDS = 10;
 export const DAILY_GOAL = DAILY_NEW_WORDS + DAILY_REVIEW_WORDS;
@@ -57,9 +65,11 @@ export type Question = {
   translation: string;
   example: string;
   stage: StageId;
+  cefr: CEFRLevel;
+  topic: VocabularyTopic;
 };
 
-const CURATED_QUESTIONS: Question[] = [
+const CURATED_QUESTIONS: Array<Omit<Question, "cefr" | "topic">> = [
   { word: "curious", pronunciation: "/ˈkjʊəriəs/", partOfSpeech: "adjective", definition: "wanting to know or learn something", translation: "好奇的", example: "Curious learners ask better questions.", stage: "beginner" },
   { word: "journey", pronunciation: "/ˈdʒɜːni/", partOfSpeech: "noun", definition: "an act of travelling from one place to another", translation: "旅程；旅途", example: "Learning English is a rewarding journey.", stage: "beginner" },
   { word: "achieve", pronunciation: "/əˈtʃiːv/", partOfSpeech: "verb", definition: "to succeed in doing or getting something", translation: "達成；實現", example: "She worked hard to achieve her goal.", stage: "beginner" },
@@ -106,18 +116,25 @@ const CURATED_QUESTIONS: Question[] = [
 ];
 
 
+const CEFR_BY_STAGE: Record<StageId, CEFRLevel> = { beginner: "A1", intermediate: "B1", advanced: "B2", expert: "C1" };
+const CURATED_NORMALIZED: Question[] = CURATED_QUESTIONS.map((question) => ({
+  ...question,
+  cefr: CEFR_BY_STAGE[question.stage],
+  topic: "everyday",
+}));
+
 const GENERATED_QUESTIONS: Question[] = GENERATED_VOCABULARY.map((entry) => ({
   ...entry,
 }));
 
-const CURATED_WORDS = new Set(CURATED_QUESTIONS.map((question) => question.word));
+const CURATED_WORDS = new Set(CURATED_NORMALIZED.map((question) => question.word));
 
 /**
  * The curated lessons provide polished examples for the first release words;
  * generated entries expand the offline bank to the requested 15,000-word tiers.
  */
 export const QUESTIONS: Question[] = [
-  ...CURATED_QUESTIONS,
+  ...CURATED_NORMALIZED,
   ...GENERATED_QUESTIONS.filter((question) => !CURATED_WORDS.has(question.word)),
 ];
 
