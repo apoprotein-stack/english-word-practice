@@ -7,6 +7,7 @@ export const LEARNING_STORAGE_KEY = "@wordly/learning-record-v1";
 
 export type LearningSession = {
   id: string;
+  /** Local date (YYYY-MM-DD); older records may hold a display label such as "今天". */
   date: string;
   label: string;
   words: number;
@@ -100,6 +101,7 @@ export async function incrementTodayWord(): Promise<LearningRecord> {
     totalWords: current.totalWords + 1,
     lastDate: today,
     streak: nextStreak(current, today),
+    weekly: current.weekly.map((count, index) => index === dayIndex() ? count + 1 : count),
   };
   await saveLearningRecord(next);
   return next;
@@ -116,9 +118,18 @@ export async function recordLearningSession(stageName: string, words: number, mi
     streak: nextStreak(current, date),
     lastDate: date,
     weekly: current.weekly.map((count, index) => index === dayIndex() ? count + words : count),
-    sessions: [{ id: `${Date.now()}-${stageName}`, date: "今天", label: `${stageName} · 導讀練習`, words, minutes }, ...current.sessions].slice(0, 20),
+    sessions: [{ id: `${Date.now()}-${stageName}`, date, label: `${stageName} · 導讀練習`, words, minutes }, ...current.sessions].slice(0, 20),
     learnedWords: [...new Set([...current.learnedWords, ...learnedWords])],
   };
   await saveLearningRecord(next);
   return next;
+}
+
+/** Display label for a session date: 今天, 昨天, or M月D日. Non-date legacy labels are returned unchanged. */
+export function formatSessionDate(date: string, today = localDateKey()): string {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return date;
+  if (date === today) return "今天";
+  if (date === previousDateKey(today)) return "昨天";
+  const [, month, day] = date.split("-").map(Number);
+  return `${month}月${day}日`;
 }

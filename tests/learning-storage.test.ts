@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { localDateKey, localDayNumber, previousDateKey, weekStartKey } from "../lib/date-keys";
-import { incrementTodayWord, loadLearningRecord, recordLearningSession } from "../lib/learning-storage";
+import { formatSessionDate, incrementTodayWord, loadLearningRecord, recordLearningSession } from "../lib/learning-storage";
 import { getDailyWordPlan } from "../lib/word-practice";
 
 const storage = new Map<string, string>();
@@ -101,5 +101,24 @@ describe("learning record weekly counts", () => {
     const record = await loadLearningRecord();
     expect(record.weekly).toEqual([0, 0, 0, 0, 0, 0, 0]);
     expect(record.streak).toBe(0);
+  });
+});
+
+describe("home-screen words and session dates", () => {
+  it("counts single words marked on the home screen in the weekly chart", async () => {
+    at(2026, 10, 14);
+    await incrementTodayWord();
+    await incrementTodayWord();
+    expect((await loadLearningRecord()).weekly).toEqual([0, 0, 2, 0, 0, 0, 0]);
+  });
+
+  it("stores the session date and labels it relative to today", async () => {
+    at(2026, 10, 12);
+    const record = await recordLearningSession("初階", 5);
+    expect(record.sessions[0].date).toBe("2026-10-12");
+    expect(formatSessionDate("2026-10-12", "2026-10-12")).toBe("今天");
+    expect(formatSessionDate("2026-10-12", "2026-10-13")).toBe("昨天");
+    expect(formatSessionDate("2026-10-12", "2026-10-20")).toBe("10月12日");
+    expect(formatSessionDate("今天", "2026-10-20")).toBe("今天");
   });
 });
