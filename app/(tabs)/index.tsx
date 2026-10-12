@@ -1,7 +1,7 @@
 import { router } from "expo-router";
 import * as Haptics from "expo-haptics";
 import { useEffect, useState } from "react";
-import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Image, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
@@ -56,9 +56,12 @@ export default function HomeScreen() {
         contentContainerStyle={styles.content}
       >
         <View style={styles.header}>
-          <View>
-            <Text style={[styles.eyebrow, { color: colors.muted }]}>{today.toUpperCase()}</Text>
-            <Text style={[styles.greeting, { color: colors.foreground }]}>Wordly 網站練習版</Text>
+          <View style={styles.brandLockup}>
+            <Image source={require("../../assets/images/icon.png")} style={styles.brandLogo} accessibilityLabel="Wordly logo" />
+            <View>
+              <Text style={[styles.eyebrow, { color: colors.muted }]}>{today.toUpperCase()}</Text>
+              <Text style={[styles.greeting, { color: colors.foreground }]}>Wordly 網站練習版</Text>
+            </View>
           </View>
           <Pressable
             accessibilityLabel="Open profile"
@@ -208,6 +211,8 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   content: { paddingTop: 18, paddingBottom: 34, gap: 24 },
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  brandLockup: { flexDirection: "row", alignItems: "center", flex: 1, gap: 11 },
+  brandLogo: { width: 48, height: 48, borderRadius: 14 },
   eyebrow: { fontSize: 11, fontWeight: "700", letterSpacing: 1.4, lineHeight: 16 },
   greeting: { fontSize: 24, fontWeight: "800", letterSpacing: -0.5, lineHeight: 31, marginTop: 3 },
   avatar: { width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center" },
