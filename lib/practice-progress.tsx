@@ -1,6 +1,8 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 
+import { localDateKey, previousDateKey } from "./date-keys";
+
 const STORAGE_KEY = "listenloop.practice-progress.v1";
 
 export type PracticeRecord = {
@@ -31,19 +33,6 @@ const emptyProgress: StoredProgress = {
 };
 
 const ProgressContext = createContext<PracticeProgressContextValue | null>(null);
-
-export function localDateKey(date = new Date()) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
-function previousDateKey(dateKey: string) {
-  const date = new Date(`${dateKey}T12:00:00`);
-  date.setDate(date.getDate() - 1);
-  return localDateKey(date);
-}
 
 export function PracticeProgressProvider({ children }: { children: ReactNode }) {
   const [progress, setProgress] = useState<StoredProgress>(emptyProgress);

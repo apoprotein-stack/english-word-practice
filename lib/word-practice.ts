@@ -1,3 +1,4 @@
+import { localDayNumber } from "./date-keys";
 import { GENERATED_VOCABULARY } from "./vocabulary-bank.generated";
 
 export type StageId = "beginner" | "intermediate" | "advanced" | "expert";
@@ -128,8 +129,7 @@ export function getDailyWordPlan(stage: StageId, date = new Date(), learnedWords
   const pool = getQuestionsForStage(stage);
   if (pool.length === 0) return { newWords: [], reviewWords: [] };
   const config = getDailyPlanConfig(learnedWords.length);
-  const dateSeed = Number(`${date.getFullYear()}${date.getMonth() + 1}${date.getDate()}`);
-  const offset = dateSeed % pool.length;
+  const offset = localDayNumber(date) % pool.length;
   const ordered = pool.slice(offset).concat(pool.slice(0, offset));
   const learned = new Set(learnedWords);
   const newPool = ordered.filter((question) => !learned.has(question.word));
