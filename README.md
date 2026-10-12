@@ -35,7 +35,7 @@ flowchart LR
 - Listen 分頁：每日一段 30–60 秒美式英文內容。
 - 30 天題庫，涵蓋簡單、中等、高級、專業四種難度。
 - 每篇內容包含逐字稿、兩道理解題、關鍵資訊與自然英文回答。
-- 支援瀏覽器 TTS 播放，以及瀏覽器支援時的麥克風語音辨識。
+- 支援瀏覽器 TTS 播放（錄音與語音辨識功能已移除）。
 - 文字回答或口說回答後，顯示抓到的重點與自然說法。
 - 難度選擇會保存到本機，日期切換時自動取得當日內容。
 - ListenLoop 的每日完成紀錄與原本 Wordly 的 Records 分開保存，避免兩種學習資料互相覆蓋；後續可再做跨模組統計。
@@ -105,6 +105,16 @@ public/
 2. **本機持久化分成兩個 namespace**：Wordly 使用 `@wordly/learning-record-v1`；ListenLoop 使用自己的 practice progress key。
 3. **不要求外部 API key**：目前題庫與語音功能可在前端執行；未來需要雲端同步或 AI 評分時，再把服務層加入 `server/`。
 4. **Expo Router 負責跨平台路由**：同一套畫面可供 Web、PWA 與日後原生平台使用。
+
+## 部署
+
+| 平台 | 狀態 | 設定檔 | 說明 |
+|---|---|---|---|
+| **Vercel** | 主要部署 | `vercel.json` | 推送 `main` 自動部署正式站；每個 PR 分支自動產生 Preview。 |
+| Netlify | 已暫停 | `netlify.toml` | 已在 Netlify 後台停止建置；設定檔保留，恢復時在後台重新啟用即可。 |
+| GitHub Pages | 仍在運作 | `.github/workflows/deploy-pages.yml` | 推送 `main` 時仍會自動部署到 `/english-word-practice` 子路徑。 |
+
+三者都使用同一個靜態匯出指令 `pnpm pwa:export`，輸出到 `dist/`。Vercel 與 Netlify 以 `/index.html` 作為 SPA fallback；GitHub Pages 由 workflow 產生 `404.html`。
 
 ## PWA 與 GitHub Pages
 
