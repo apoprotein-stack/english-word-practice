@@ -35,7 +35,7 @@ describe("Wordly learning stages", () => {
   });
 
   it("uses an automatic sequence without waiting for spoken responses", () => {
-    expect(AUTO_PLAY_SEQUENCE).toEqual(["preview", "spell", "example"]);
+    expect(AUTO_PLAY_SEQUENCE).toEqual(["preview", "spell", "syllable", "example"]);
     expect(AUTO_PLAY_SEQUENCE).not.toContain("speak");
   });
 

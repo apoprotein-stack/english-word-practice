@@ -10,7 +10,7 @@ export const ADVANCED_DAILY_REVIEW_WORDS = 15;
 export const ADVANCED_DAILY_GOAL = ADVANCED_DAILY_NEW_WORDS + ADVANCED_DAILY_REVIEW_WORDS;
 export const VOCABULARY_MILESTONE = 100;
 export const MAX_DAILY_GOAL = ADVANCED_DAILY_GOAL;
-export const AUTO_PLAY_SEQUENCE = ["preview", "spell", "example"] as const;
+export const AUTO_PLAY_SEQUENCE = ["preview", "spell", "syllable", "example"] as const;
 
 export type VocabularyProgress = { learned: number; remaining: number; percent: number; milestoneReached: boolean };
 

@@ -9,10 +9,12 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
 import { loadLearningRecord, recordLearningSession } from "@/lib/learning-storage";
 import { recordMastery } from "@/lib/mastery-storage";
+import { splitSyllables } from "@/lib/syllables";
 import { getDailyPlanConfig, getDailyWordPlan, getSpeechFallbackDuration, STAGES, type StageId } from "@/lib/word-practice";
 
-type Phase = "preview" | "spell" | "example";
-const PHASES: Phase[] = ["preview", "spell", "example"];
+type Phase = "preview" | "spell" | "syllable" | "example";
+const PHASES: Phase[] = ["preview", "spell", "syllable", "example"];
+const PHASE_LABELS: Record<Phase, string> = { preview: "導讀", spell: "拼讀", syllable: "音節", example: "例句" };
 
 export default function PracticeScreen() {
   const colors = useColors();
@@ -30,6 +32,7 @@ export default function PracticeScreen() {
   const finished = !question;
   const phaseIndex = PHASES.indexOf(phase);
   const isReviewWord = current >= dailyPlan.newWords.length;
+  const syllables = useMemo(() => (question ? splitSyllables(question.word) : []), [question]);
 
 
   useEffect(() => {
@@ -69,42 +72,42 @@ export default function PracticeScreen() {
       }
     };
 
-    const speakSpellingWithFallback = (word: string, rate: number, onDone: () => void) => {
-      const letters = Array.from(word);
+    // Speaks each part (letter or syllable) as its own utterance, then calls onDone.
+    const speakPartsWithFallback = (parts: string[], rate: number, onDone: () => void) => {
       let index = 0;
 
-      const playNextLetter = () => {
+      const playNextPart = () => {
         if (cancelled) return;
-        if (index >= letters.length) {
+        if (index >= parts.length) {
           // Give the final utterance a short quiet gap before saying the whole word.
           timer = setTimeout(onDone, 180);
           return;
         }
 
-        const letter = letters[index++];
+        const part = parts[index++];
         let completed = false;
-        const finishLetter = () => {
+        const finishPart = () => {
           if (completed || cancelled) return;
           completed = true;
           if (timer) clearTimeout(timer);
           Speech.stop();
           // A brief gap prevents browser speechSynthesis from merging or dropping
           // the final letters when individual utterances are queued too quickly.
-          timer = setTimeout(playNextLetter, 120);
+          timer = setTimeout(playNextPart, 120);
         };
 
-        Speech.speak(letter, {
+        Speech.speak(part, {
           language: "en-US",
           rate,
           volume: 1,
-          onDone: finishLetter,
-          onError: finishLetter,
+          onDone: finishPart,
+          onError: finishPart,
         });
         // Keep progressing even when a browser does not emit onDone/onError.
-        timer = setTimeout(finishLetter, Math.max(1400, Math.round(1900 / rate)));
+        timer = setTimeout(finishPart, Math.max(1400, Math.round(1900 / rate)));
       };
 
-      playNextLetter();
+      playNextPart();
     };
 
     if (phase === "preview") {
@@ -118,17 +121,27 @@ export default function PracticeScreen() {
           speakWithFallback(question.translation, { language: "zh-TW", rate: 1, volume: 1 }, () => { if (!cancelled) setPhase("spell"); });
       });
     } else if (phase === "spell") {
-      // 自動逐字母拼讀，完成後再播放完整單字；自動播放模式直接進入例句。
-      speakSpellingWithFallback(question.word, autoMode ? 0.98 : 0.88, () => {
+      // 自動逐字母拼讀，完成後再播放完整單字，接著進入音節拼讀。
+      speakPartsWithFallback(Array.from(question.word), autoMode ? 0.98 : 0.88, () => {
           if (cancelled) return;
           speakWithFallback(question.word, {
             language: "en-US",
             rate: 0.98,
             volume: 1,
           }, () => {
-              if (!cancelled) setPhase("example");
+              if (!cancelled) setPhase("syllable");
           });
       });
+    } else if (phase === "syllable") {
+      // 逐音節放慢朗讀，再播放一次完整單字；單音節字直接讀一次。
+      const sayWholeWord = () => {
+        if (cancelled) return;
+        speakWithFallback(question.word, { language: "en-US", rate: 0.98, volume: 1 }, () => {
+          if (!cancelled) setPhase("example");
+        });
+      };
+      if (syllables.length > 1) speakPartsWithFallback(syllables, 0.8, sayWholeWord);
+      else sayWholeWord();
     } else if (phase === "example") {
       speakWithFallback(question.example, {
         language: "en-US",
@@ -156,7 +169,7 @@ export default function PracticeScreen() {
           <View style={[styles.finishIcon, { backgroundColor: `${colors.success}20` }]}><IconSymbol name="checkmark.circle.fill" size={46} color={colors.success} /></View>
           <Text style={[styles.eyebrow, { color: colors.primary }]}>LEVEL COMPLETE</Text>
           <Text style={[styles.finishTitle, { color: colors.foreground }]}>{stage.name}學習完成</Text>
-          <Text style={[styles.finishBody, { color: colors.muted }]}>你已完成自動導讀、拼讀與例句三個步驟。</Text>
+          <Text style={[styles.finishBody, { color: colors.muted }]}>你已完成自動導讀、拼讀、音節與例句四個步驟。</Text>
           <View style={[styles.summary, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <Text style={[styles.summaryNumber, { color: colors.foreground }]}>{words.length}</Text>
             <Text style={[styles.summaryLabel, { color: colors.muted }]}>{stage.english} · 目標常用字 {stage.wordCount.toLocaleString()}</Text>
@@ -168,7 +181,7 @@ export default function PracticeScreen() {
     );
   }
 
-  const phaseTitle = phase === "preview" ? "自動導讀" : phase === "spell" ? "自動拼讀" : "自動例句";
+  const phaseTitle = `自動${PHASE_LABELS[phase]}`;
   const buttonLabel = "自動播放中 · 進行中";
 
   return (
@@ -180,7 +193,7 @@ export default function PracticeScreen() {
           <View style={styles.headerSpacer} />
         </View>
         <View style={[styles.progressTrack, { backgroundColor: colors.border }]}><View style={[styles.progressTrackFill, { backgroundColor: stage.color, width: `${((current + phaseIndex / PHASES.length) / words.length) * 100}%` }]} /></View>
-        <View style={styles.phaseRow}>{PHASES.map((item, index) => <View key={item} style={styles.phaseItem}><View style={[styles.phaseDot, { backgroundColor: index <= phaseIndex ? stage.color : colors.border }]} /><Text style={[styles.phaseText, { color: index === phaseIndex ? colors.foreground : colors.muted }]}>{index + 1}. {item === "preview" ? "導讀" : item === "spell" ? "拼讀" : "例句"}</Text></View>)}</View>
+        <View style={styles.phaseRow}>{PHASES.map((item, index) => <View key={item} style={styles.phaseItem}><View style={[styles.phaseDot, { backgroundColor: index <= phaseIndex ? stage.color : colors.border }]} /><Text style={[styles.phaseText, { color: index === phaseIndex ? colors.foreground : colors.muted }]}>{index + 1}. {PHASE_LABELS[item]}</Text></View>)}</View>
         {autoMode && <View style={[styles.autoBadge, { backgroundColor: `${colors.primary}18`, borderColor: `${colors.primary}45` }]}><IconSymbol name="play.circle.fill" size={15} color={colors.primary} /><Text style={[styles.autoBadgeText, { color: colors.primary }]}>自動播放中 · 不等待回應</Text></View>}
 
         <View style={styles.learningArea}>
@@ -195,6 +208,7 @@ export default function PracticeScreen() {
 
           {phase === "preview" && <View style={[styles.infoCard, { backgroundColor: colors.surface, borderColor: colors.border }]}><Text style={[styles.definition, { color: colors.foreground }]}>{question.definition}</Text><Text style={[styles.translation, { color: colors.muted }]}>{question.translation}</Text><Text style={[styles.source, { color: colors.primary }]}>詞義參照：ECDICT 英漢資料庫＋精選 Longman 內容</Text></View>}
           {phase === "spell" && <View style={[styles.infoCard, { backgroundColor: colors.surface, borderColor: colors.border }]}><Text style={[styles.spellLabel, { color: colors.muted }]}>自動拼讀示範</Text><Text style={[styles.spelling, { color: colors.foreground }]}>{question.word.split("").join(" · ")}</Text><Text style={[styles.spellHint, { color: colors.muted }]}>請聽逐字母拼讀，接著會再播放一次完整單字。</Text></View>}
+          {phase === "syllable" && <View style={[styles.infoCard, { backgroundColor: colors.surface, borderColor: colors.border }]}><Text style={[styles.spellLabel, { color: colors.muted }]}>音節拼讀示範 · {syllables.length} 個音節</Text><Text style={[styles.spelling, { color: colors.foreground }]}>{syllables.join(" · ")}</Text><Text style={[styles.spellHint, { color: colors.muted }]}>{syllables.length > 1 ? "請聽逐音節放慢朗讀，接著會再播放一次完整單字。音節為自動切分，可能與字典略有差異。" : "這是單音節字，會直接朗讀一次完整單字。"}</Text></View>}
           {phase === "example" && <View style={[styles.infoCard, { backgroundColor: colors.surface, borderColor: colors.border }]}><Text style={[styles.exampleLabel, { color: colors.primary }]}>IN CONTEXT</Text><Text style={[styles.example, { color: colors.foreground }]}>{question.example}</Text><Text style={[styles.translation, { color: colors.muted }]}>把這個單字放進真實語境裡記住它。</Text></View>}
         </View>
 
