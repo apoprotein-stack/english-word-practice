@@ -1,3 +1,5 @@
+import { GENERATED_VOCABULARY } from "./vocabulary-bank.generated";
+
 export type StageId = "beginner" | "intermediate" | "advanced" | "expert";
 export const DAILY_NEW_WORDS = 10;
 export const DAILY_REVIEW_WORDS = 10;
@@ -56,7 +58,7 @@ export type Question = {
   stage: StageId;
 };
 
-export const QUESTIONS: Question[] = [
+const CURATED_QUESTIONS: Question[] = [
   { word: "curious", pronunciation: "/ˈkjʊəriəs/", partOfSpeech: "adjective", definition: "wanting to know or learn something", translation: "好奇的", example: "Curious learners ask better questions.", stage: "beginner" },
   { word: "journey", pronunciation: "/ˈdʒɜːni/", partOfSpeech: "noun", definition: "an act of travelling from one place to another", translation: "旅程；旅途", example: "Learning English is a rewarding journey.", stage: "beginner" },
   { word: "achieve", pronunciation: "/əˈtʃiːv/", partOfSpeech: "verb", definition: "to succeed in doing or getting something", translation: "達成；實現", example: "She worked hard to achieve her goal.", stage: "beginner" },
@@ -100,6 +102,22 @@ export const QUESTIONS: Question[] = [
   { word: "nuanced", pronunciation: "/ˈnjuːɑːnst/", partOfSpeech: "adjective", definition: "showing subtle differences or meanings", translation: "細膩的；有微妙差異的", example: "The article offers a nuanced analysis.", stage: "expert" },
   { word: "pragmatic", pronunciation: "/præɡˈmætɪk/", partOfSpeech: "adjective", definition: "dealing with problems in a practical way", translation: "務實的；實用的", example: "They reached a pragmatic compromise.", stage: "expert" },
   { word: "ubiquitous", pronunciation: "/juːˈbɪkwɪtəs/", partOfSpeech: "adjective", definition: "present or found everywhere", translation: "無所不在的", example: "Digital devices are ubiquitous in modern life.", stage: "expert" },
+];
+
+
+const GENERATED_QUESTIONS: Question[] = GENERATED_VOCABULARY.map((entry) => ({
+  ...entry,
+}));
+
+const CURATED_WORDS = new Set(CURATED_QUESTIONS.map((question) => question.word));
+
+/**
+ * The curated lessons provide polished examples for the first release words;
+ * generated entries expand the offline bank to the requested 15,000-word tiers.
+ */
+export const QUESTIONS: Question[] = [
+  ...CURATED_QUESTIONS,
+  ...GENERATED_QUESTIONS.filter((question) => !CURATED_WORDS.has(question.word)),
 ];
 
 export function getQuestionsForStage(stage: StageId): Question[] {

@@ -13,7 +13,8 @@
       "@shared/*": [
         "./shared/*"
       ]
-    }
+    },
+    "resolveJsonModule": true
   },
   "include": [
     "**/*.ts",

@@ -190,10 +190,10 @@ export default function PracticeScreen() {
             <Text style={styles.word}>{question.word}</Text>
             <Text style={styles.pronunciation}>{question.pronunciation}</Text>
             <Text style={styles.cardTranslation}>中文對照：{question.translation}</Text>
-            <Text style={styles.partOfSpeech}>{question.partOfSpeech.toUpperCase()} · LONGMAN DICTIONARY 參照</Text>
+            <Text style={styles.partOfSpeech}>{question.partOfSpeech.toUpperCase()} · DICTIONARY REFERENCE</Text>
           </View>
 
-          {phase === "preview" && <View style={[styles.infoCard, { backgroundColor: colors.surface, borderColor: colors.border }]}><Text style={[styles.definition, { color: colors.foreground }]}>{question.definition}</Text><Text style={[styles.translation, { color: colors.muted }]}>{question.translation}</Text><Text style={[styles.source, { color: colors.primary }]}>詞義參照：Longman Dictionary of Contemporary English</Text></View>}
+          {phase === "preview" && <View style={[styles.infoCard, { backgroundColor: colors.surface, borderColor: colors.border }]}><Text style={[styles.definition, { color: colors.foreground }]}>{question.definition}</Text><Text style={[styles.translation, { color: colors.muted }]}>{question.translation}</Text><Text style={[styles.source, { color: colors.primary }]}>詞義參照：ECDICT 英漢資料庫＋精選 Longman 內容</Text></View>}
           {phase === "spell" && <View style={[styles.infoCard, { backgroundColor: colors.surface, borderColor: colors.border }]}><Text style={[styles.spellLabel, { color: colors.muted }]}>自動拼讀示範</Text><Text style={[styles.spelling, { color: colors.foreground }]}>{question.word.split("").join(" · ")}</Text><Text style={[styles.spellHint, { color: colors.muted }]}>請聽逐字母拼讀，接著會再播放一次完整單字。</Text></View>}
           {phase === "example" && <View style={[styles.infoCard, { backgroundColor: colors.surface, borderColor: colors.border }]}><Text style={[styles.exampleLabel, { color: colors.primary }]}>IN CONTEXT</Text><Text style={[styles.example, { color: colors.foreground }]}>{question.example}</Text><Text style={[styles.translation, { color: colors.muted }]}>把這個單字放進真實語境裡記住它。</Text></View>}
         </View>

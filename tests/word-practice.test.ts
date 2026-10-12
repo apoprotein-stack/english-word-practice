@@ -57,6 +57,24 @@ describe("Wordly learning stages", () => {
     expect(QUESTIONS.every((question) => question.example && question.pronunciation)).toBe(true);
   });
 
+  it("ships the full cumulative vocabulary tiers", () => {
+    expect(QUESTIONS.length).toBeGreaterThanOrEqual(15000);
+    expect(getQuestionsForStage("beginner").length).toBeGreaterThanOrEqual(2000);
+    expect(getQuestionsForStage("intermediate").length).toBeGreaterThanOrEqual(3000);
+    expect(getQuestionsForStage("advanced").length).toBeGreaterThanOrEqual(4000);
+    expect(getQuestionsForStage("expert").length).toBeGreaterThanOrEqual(6000);
+  });
+
+  it("can supply twenty new words in the 35-word plan", () => {
+    const learnedExpertWords = getQuestionsForStage("expert").slice(0, 15).map((word) => word.word);
+    const learnedWords = [...learnedExpertWords, ...Array.from({ length: 85 }, (_, index) => `learned-${index}`)];
+    const plan = getDailyWordPlan("expert", new Date(2026, 8, 29), learnedWords);
+    expect(plan.newWords).toHaveLength(20);
+    expect(plan.reviewWords).toHaveLength(15);
+    expect(new Set(plan.newWords.map((word) => word.word)).size).toBe(20);
+    expect(new Set(plan.reviewWords.map((word) => word.word)).size).toBe(15);
+  });
+
   it("scores matching answers by position", () => {
     expect(scoreAnswers(["curious", "wrong", "ambiguous"])).toBe(1);
     expect(scoreAnswers([])).toBe(0);
