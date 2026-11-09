@@ -115,7 +115,8 @@ export default function HomeScreen() {
         </View>
 
         <View style={[styles.vocabularyProgressCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <View style={styles.vocabularyProgressHeader}><View><Text style={[styles.vocabularyProgressTitle, { color: colors.foreground }]}>單字學習進度</Text><Text style={[styles.vocabularyProgressHint, { color: colors.muted }]}>朝向 {VOCABULARY_MILESTONE} 字里程碑</Text></View><Text style={[styles.vocabularyProgressPercent, { color: colors.primary }]}>{vocabularyProgress.percent}%</Text></View>
+          <View style={styles.vocabularyProgressHeader}><View><Text style={[styles.vocabularyProgressTitle, { color: colors.foreground }]}>目前的單字進度</Text><Text style={[styles.vocabularyProgressHint, { color: colors.muted }]}>第一階段里程碑：{VOCABULARY_MILESTONE} 字</Text></View><Text style={[styles.vocabularyProgressPercent, { color: colors.primary }]}>{vocabularyProgress.percent}%</Text></View>
+          <View style={styles.vocabularyProgressCount}><Text style={[styles.vocabularyProgressCountValue, { color: colors.foreground }]}>{vocabularyProgress.learned}</Text><Text style={[styles.vocabularyProgressCountTotal, { color: colors.muted }]}> / {VOCABULARY_MILESTONE} 字</Text><Text style={[styles.vocabularyProgressStatus, { color: vocabularyProgress.milestoneReached ? colors.success : colors.primary }]}>{vocabularyProgress.milestoneReached ? "已完成第一階段" : `還差 ${vocabularyProgress.remaining} 字`}</Text></View>
           <View style={[styles.vocabularyTrack, { backgroundColor: colors.border }]}><View style={[styles.vocabularyTrackFill, { width: `${vocabularyProgress.percent}%`, backgroundColor: colors.primary }]} /></View>
           <View style={styles.vocabularyProgressLabels}><Text style={[styles.vocabularyProgressLearned, { color: colors.foreground }]}>已學 {vocabularyProgress.learned} 字</Text><Text style={[styles.vocabularyProgressRemaining, { color: colors.muted }]}>尚未學 {vocabularyProgress.remaining} 字</Text></View>
         </View>
@@ -246,6 +247,10 @@ const styles = StyleSheet.create({
   vocabularyProgressTitle: { fontSize: 14, fontWeight: "900" },
   vocabularyProgressHint: { fontSize: 11, marginTop: 3 },
   vocabularyProgressPercent: { fontSize: 18, fontWeight: "900" },
+  vocabularyProgressCount: { flexDirection: "row", alignItems: "baseline", marginTop: 11 },
+  vocabularyProgressCountValue: { fontSize: 30, fontWeight: "900", letterSpacing: -0.8 },
+  vocabularyProgressCountTotal: { fontSize: 13, fontWeight: "700" },
+  vocabularyProgressStatus: { marginLeft: "auto", fontSize: 11, fontWeight: "800" },
   vocabularyTrack: { height: 9, borderRadius: 5, overflow: "hidden", marginTop: 13 },
   vocabularyTrackFill: { height: "100%", borderRadius: 5 },
   vocabularyProgressLabels: { flexDirection: "row", justifyContent: "space-between", marginTop: 8 },
